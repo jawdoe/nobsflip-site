@@ -1,0 +1,40 @@
+[
+  {
+    "id": "cfd56f66",
+    "title": "blahblah",
+    "buy": 3,
+    "sell": 35,
+    "notes": "None",
+    "photoUrl": null,
+    "addedBy": "jawdoe",
+    "createdAt": "2026-04-16T00:52:16.177Z",
+    "status": "active",
+    "soldAt": null,
+    "actualSell": null
+  },
+  {
+    "id": "1919be17",
+    "title": "blah",
+    "buy": 1,
+    "sell": 20,
+    "notes": "None",
+    "photoUrl": null,
+    "addedBy": "jawdoe",
+    "createdAt": "2026-04-16T00:38:53.709Z",
+    "status": "sold",
+    "soldAt": "2026-04-16T00:43:07.244Z",
+    "actualSell": 20
+  },
+  {
+    "id": "a6cb43fa",
+    "title": "\"PS3 Controller\"",
+    "buy": 5,
+    "sell": 25,
+    "notes": "\"Tested\"",
+    "addedBy": "jawdoe",
+    "createdAt": "2026-04-16T00:24:51.802Z",
+    "status": "sold",
+    "soldAt": "2026-04-16T00:25:52.167Z",
+    "actualSell": 22
+  }
+]

@@ -5,14 +5,12 @@ import {
 } from 'discord.js';
 import { insertEbayDraft } from '../utils/flips';
 import { supabase } from '../lib/supabase';
+import { createEbayInventoryItem } from '../utils/ebay-inventory';
 
 const ebayCreateDraft = {
   data: new SlashCommandBuilder()
     .setName('ebay-create-draft')
-    .setDescription('Create an eBay draft for an existing flip')
-    .addStringOption(option =>
-      option.setName('flip_id').setDescription('Flip ID').setRequired(true)
-    )
+    .setDescription('Create an eBay draft and push inventory to eBay')
     .addStringOption(option =>
       option.setName('title').setDescription('eBay listing title').setRequired(true)
     )
@@ -29,6 +27,12 @@ const ebayCreateDraft = {
           { name: 'Used', value: 'Used' },
           { name: 'For parts or not working', value: 'For parts or not working' }
         )
+    )
+    .addStringOption(option =>
+      option
+        .setName('flip_id')
+        .setDescription('Optional Flip ID')
+        .setRequired(false)
     )
     .addStringOption(option =>
       option.setName('category').setDescription('eBay category name').setRequired(false)
@@ -67,7 +71,7 @@ const ebayCreateDraft = {
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply();
 
-    const flipId = interaction.options.getString('flip_id', true);
+    const flipId = interaction.options.getString('flip_id') ?? null;
     const title = interaction.options.getString('title', true);
     const ebayPrice = interaction.options.getNumber('ebay_price', true);
     const condition = interaction.options.getString('condition', true);
@@ -102,6 +106,66 @@ const ebayCreateDraft = {
       imageUrls: photoUrls,
     });
 
+    let inventoryStatus = 'Not pushed to eBay inventory';
+
+    try {
+      if (photoUrls.length > 0) {
+        await createEbayInventoryItem({
+          sku: ebayDraft.ebay_sku,
+          title,
+          description: description ?? title,
+          condition,
+          imageUrls: photoUrls,
+          quantity: 1,
+        });
+
+        inventoryStatus = 'Created in eBay inventory';
+
+        await supabase
+          .from('ebay_listings')
+          .update({
+            ebay_status: 'inventory_created',
+            draft_ready: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', ebayDraft.id);
+
+        await supabase.from('ebay_listing_events').insert({
+          ebay_listing_id: ebayDraft.id,
+          event_type: 'inventory_created',
+          message: `Inventory item created on eBay by ${interaction.user.username}`,
+          api_response: {
+            discord_user_id: interaction.user.id,
+            discord_username: interaction.user.username,
+            sku: ebayDraft.ebay_sku,
+          },
+        });
+      }
+    } catch (error) {
+      inventoryStatus = 'Failed to create eBay inventory item';
+
+      await supabase
+        .from('ebay_listings')
+        .update({
+          ebay_status: 'inventory_error',
+          last_error: error instanceof Error ? error.message : 'Unknown inventory error',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', ebayDraft.id);
+
+      await supabase.from('ebay_listing_events').insert({
+        ebay_listing_id: ebayDraft.id,
+        event_type: 'inventory_error',
+        message: error instanceof Error ? error.message : 'Unknown inventory error',
+        api_response: {
+          discord_user_id: interaction.user.id,
+          discord_username: interaction.user.username,
+        },
+      });
+
+      throw error;
+    }
+
     await supabase.from('ebay_listing_events').insert({
       ebay_listing_id: ebayDraft.id,
       event_type: 'draft_created_from_discord',
@@ -114,12 +178,17 @@ const ebayCreateDraft = {
 
     const embed = new EmbedBuilder()
       .setTitle('🧾 eBay Draft Created')
-      .setDescription('Draft is saved in Supabase and ready to review before publishing.')
+      .setDescription('Draft saved in Supabase and pushed to eBay inventory if photos were supplied.')
       .addFields(
         { name: 'Listing ID', value: ebayDraft.id, inline: false },
-        { name: 'Flip ID', value: flipId, inline: true },
+        {
+          name: 'Flip ID',
+          value: flipId ?? 'Standalone draft',
+          inline: true,
+        },
         { name: 'SKU', value: ebayDraft.ebay_sku, inline: true },
-        { name: 'Status', value: ebayDraft.ebay_status, inline: true },
+        { name: 'Supabase Status', value: ebayDraft.ebay_status, inline: true },
+        { name: 'eBay Inventory', value: inventoryStatus, inline: false },
         { name: 'Title', value: title, inline: false },
         { name: 'Price', value: `$${ebayPrice.toFixed(2)}`, inline: true },
         { name: 'Condition', value: condition, inline: true },

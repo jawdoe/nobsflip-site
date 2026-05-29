@@ -20,7 +20,7 @@ export type FlipItem = {
 };
 
 export type EbayDraftInput = {
-  flipId: string;
+  flipId: string | null;
   title: string;
   description: string | null;
   conditionName: string;
@@ -36,7 +36,7 @@ export type EbayDraftInput = {
 
 export type EbayDraftRow = {
   id: string;
-  flip_id: string;
+  flip_id: string | null;
   ebay_sku: string;
   ebay_status: string;
   title: string;
@@ -132,15 +132,17 @@ function mapUpdatesToRow(updates: Partial<FlipItem>) {
   return rowUpdates;
 }
 
-function makeEbaySku(flipId: string): string {
+function makeEbaySku(flipId: string | null): string {
+  if (!flipId) {
+    return `NBS-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  }
+
   const cleanId = flipId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   return `NBS-${cleanId}`;
 }
 
 function normaliseImageUrls(imageUrls: string[]): string[] {
-  return imageUrls
-    .filter(Boolean)
-    .slice(0, 4);
+  return imageUrls.filter(Boolean).slice(0, 4);
 }
 
 // --------------------

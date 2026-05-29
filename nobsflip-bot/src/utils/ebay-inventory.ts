@@ -31,30 +31,36 @@ export async function createEbayInventoryItem(
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
         'Content-Type': 'application/json',
         'Content-Language': 'en-AU',
+        'Accept-Language': 'en-AU',
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_AU',
       },
       body: JSON.stringify({
-        product: {
-          title: input.title,
-          description: input.description,
-          imageUrls: input.imageUrls,
-        },
-        condition: mapCondition(input.condition),
         availability: {
           shipToLocationAvailability: {
             quantity: input.quantity,
           },
         },
+        condition: mapCondition(input.condition),
+        product: {
+          title: input.title,
+          description: input.description,
+          imageUrls: input.imageUrls,
+        },
       }),
     }
   );
 
-  if (!response.ok) {
-    const errorBody = await response.text();
+  const responseText = await response.text();
 
+  console.log('EBAY STATUS:', response.status);
+  console.log('EBAY RESPONSE:', responseText);
+
+  if (!response.ok) {
     throw new Error(
-      `Failed to create eBay inventory item: ${response.status} ${errorBody}`
+      `Failed to create eBay inventory item: ${response.status} ${responseText}`
     );
   }
 }

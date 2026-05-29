@@ -7,6 +7,7 @@ import {
   type AutocompleteInteraction,
   type ChatInputCommandInteraction,
 } from 'discord.js';
+
 import ping from './commands/ping';
 import flipAdd from './commands/flip-add';
 import flipList from './commands/flip-list';
@@ -15,6 +16,10 @@ import flipView from './commands/flip-view';
 import flipEdit from './commands/flip-edit';
 import flipDelete from './commands/flip-delete';
 import profit from './commands/profit';
+import ebayCreateDraft from './commands/ebay-create-draft';
+import ebayPublish from './commands/ebay-publish';
+import ebayAuthCheck from './commands/ebay-auth-check';
+import ebayTestInventory from './commands/ebay-test-inventory';
 
 type Command = {
   data: {
@@ -30,17 +35,29 @@ const client = new Client({
 });
 
 const commands = new Collection<string, Command>();
-commands.set(ping.data.name, ping);
-commands.set(flipAdd.data.name, flipAdd);
-commands.set(flipList.data.name, flipList);
-commands.set(flipSold.data.name, flipSold);
-commands.set(flipView.data.name, flipView);
-commands.set(flipEdit.data.name, flipEdit);
-commands.set(flipDelete.data.name, flipDelete);
-commands.set(profit.data.name, profit);
+
+const commandList: Command[] = [
+  ping,
+  flipAdd,
+  flipList,
+  flipSold,
+  flipView,
+  flipEdit,
+  flipDelete,
+  profit,
+  ebayCreateDraft,
+  ebayPublish,
+  ebayAuthCheck,
+  ebayTestInventory,
+];
+
+for (const command of commandList) {
+  commands.set(command.data.name, command);
+}
 
 client.once(Events.ClientReady, readyClient => {
   console.log(`Logged in as ${readyClient.user.tag}`);
+  console.log(`Loaded ${commands.size} commands`);
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -52,7 +69,7 @@ client.on(Events.InteractionCreate, async interaction => {
     try {
       await command.autocomplete(interaction);
     } catch (error) {
-      console.error('Autocomplete error:', error);
+      console.error(`Autocomplete error for /${interaction.commandName}:`, error);
     }
 
     return;
@@ -61,12 +78,20 @@ client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   const command = commands.get(interaction.commandName);
-  if (!command) return;
+
+  if (!command) {
+    await interaction.reply({
+      content: `Unknown command: /${interaction.commandName}`,
+      flags: 64,
+    });
+
+    return;
+  }
 
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
+    console.error(`Command error for /${interaction.commandName}:`, error);
 
     const replyPayload = {
       content: 'There was an error while running this command.',

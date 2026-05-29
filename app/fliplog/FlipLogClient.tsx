@@ -1,7 +1,5 @@
-"use client";
-
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { FlipItem } from "./page";
 
 type FilterStatus = "all" | "active" | "sold";
@@ -31,174 +29,110 @@ function getROI(flip: FlipItem) {
   return (getProfit(flip) / flip.buy) * 100;
 }
 
-export default function FlipLogClient({ flips }: { flips: FlipItem[] }) {
-  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
-  const [sortMode, setSortMode] = useState<SortMode>("newest");
-  const [search, setSearch] = useState("");
+function buildHref({
+  status,
+  sort,
+}: {
+  status: FilterStatus;
+  sort: SortMode;
+}) {
+  const params = new URLSearchParams();
 
-  const stats = useMemo(() => {
-    const sold = flips.filter((flip) => flip.status === "sold");
-    const active = flips.filter((flip) => flip.status === "active");
+  if (status !== "all") params.set("status", status);
+  if (sort !== "newest") params.set("sort", sort);
 
-    const totalSpent = flips.reduce((sum, flip) => sum + flip.buy, 0);
-    const totalProfit = sold.reduce((sum, flip) => sum + getProfit(flip), 0);
-    const totalSales = sold.reduce(
-      (sum, flip) => sum + (flip.actualSell ?? flip.sell),
-      0
-    );
+  const query = params.toString();
+  return query ? `/fliplog?${query}` : "/fliplog";
+}
 
-    const avgROI =
-      sold.length > 0
-        ? sold.reduce((sum, flip) => sum + getROI(flip), 0) / sold.length
-        : 0;
-
-    return {
-      total: flips.length,
-      sold: sold.length,
-      active: active.length,
-      totalSpent,
-      totalProfit,
-      totalSales,
-      avgROI,
-    };
-  }, [flips]);
-
-  const filteredFlips = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
-
-    return flips
-      .filter((flip) => {
-        if (statusFilter !== "all" && flip.status !== statusFilter) {
-          return false;
-        }
-
-        if (!searchValue) return true;
-
-        return [
-          flip.title,
-          flip.notes,
-          flip.addedBy,
-          flip.status,
-          flip.createdAtDisplay,
-          flip.soldAtDisplay ?? "",
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(searchValue);
-      })
-      .sort((a, b) => {
-        if (sortMode === "newest") {
-          return (
-            new Date(b.createdAt).getTime() -
-            new Date(a.createdAt).getTime()
-          );
-        }
-
-        if (sortMode === "oldest") {
-          return (
-            new Date(a.createdAt).getTime() -
-            new Date(b.createdAt).getTime()
-          );
-        }
-
-        if (sortMode === "highestProfit") {
-          return getProfit(b) - getProfit(a);
-        }
-
-        if (sortMode === "highestROI") {
-          return getROI(b) - getROI(a);
-        }
-
-        if (sortMode === "lowestBuy") {
-          return a.buy - b.buy;
-        }
-
-        return 0;
-      });
-  }, [flips, statusFilter, sortMode, search]);
-
+export default function FlipLogClient({
+  flips,
+  totalFlips,
+  activeFlips,
+  soldFlips,
+  totalProfit,
+  status,
+  sort,
+}: {
+  flips: FlipItem[];
+  totalFlips: number;
+  activeFlips: number;
+  soldFlips: number;
+  totalProfit: number;
+  status: FilterStatus;
+  sort: SortMode;
+}) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#07070a] text-white">
-      <div className="absolute inset-0">
+    <main className="relative min-h-screen touch-manipulation overflow-hidden bg-[#07070a] text-white">
+      <div className="pointer-events-none absolute inset-0">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
           style={{ backgroundImage: "url('/media-bg.png')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/45" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/70 to-black/30" />
+        <div className="absolute inset-0 bg-black/82" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/85 to-black/50" />
       </div>
 
-      <section className="relative mx-auto max-w-7xl px-6 py-16 md:px-8 md:py-20">
-        <div className="max-w-4xl">
-          <div className="inline-flex rounded-full border border-[#8cff00]/35 bg-black/35 px-4 py-2 text-xs font-black uppercase tracking-[0.28em] text-[#8cff00] backdrop-blur">
+      <section className="relative z-10 mx-auto flex w-full max-w-[720px] flex-col px-4 pb-32 pt-8 sm:px-6 md:pt-10">
+        <div className="text-center">
+          <div className="mx-auto inline-flex rounded-full border border-[#8cff00]/35 bg-black/45 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#8cff00] backdrop-blur">
             NOBSFLIPS / Live Flip Log
           </div>
 
-          <h1 className="mt-6 text-5xl font-black uppercase leading-[0.95] tracking-tight md:text-7xl">
-            The real flip
-            <span className="block text-[#8cff00] text-stroke-heavy">
-              log.
-            </span>
+          <h1 className="mt-5 text-5xl font-black uppercase leading-[0.9] tracking-tight sm:text-6xl">
+            Real flip
+            <span className="block text-[#8cff00]">log.</span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-7 text-white/80 md:text-lg">
-            Real buys, real sales, real profit, slow movers, mistakes, and wins.
-            No fake numbers. No fluff. Just flips.
+          <p className="mx-auto mt-4 max-w-[520px] text-base leading-7 text-white/75">
+            Real buys, real sales, real profit, mistakes, wins, and slow movers.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-          <StatCard label="Total Flips" value={String(stats.total)} />
-          <StatCard label="Active" value={String(stats.active)} />
-          <StatCard label="Sold" value={String(stats.sold)} />
-          <StatCard
-            label="Total Profit"
-            value={formatMoney(stats.totalProfit)}
-          />
-          <StatCard label="Total Spent" value={formatMoney(stats.totalSpent)} />
-          <StatCard label="Total Sales" value={formatMoney(stats.totalSales)} />
-          <StatCard label="Average ROI" value={`${stats.avgROI.toFixed(1)}%`} />
-        </div>
-
-        <div className="mt-10 rounded-[2rem] border border-white/10 bg-black/45 p-5 backdrop-blur-md">
-          <div className="grid gap-4 md:grid-cols-3">
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search flips..."
-              className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#8cff00]/50"
+        <div className="mt-7 rounded-[1.7rem] border border-white/10 bg-black/60 p-4 backdrop-blur-md">
+          <div className="grid grid-cols-3 gap-2">
+            <FilterLink
+              label="All"
+              active={status === "all"}
+              href={buildHref({ status: "all", sort })}
             />
+            <FilterLink
+              label="Active"
+              active={status === "active"}
+              href={buildHref({ status: "active", sort })}
+            />
+            <FilterLink
+              label="Sold"
+              active={status === "sold"}
+              href={buildHref({ status: "sold", sort })}
+            />
+          </div>
 
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as FilterStatus)
-              }
-              className="rounded-2xl border border-white/10 bg-[#101014] px-4 py-3 text-sm text-white outline-none focus:border-[#8cff00]/50"
-            >
-              <option value="all">All flips</option>
-              <option value="active">Active only</option>
-              <option value="sold">Sold only</option>
-            </select>
-
-            <select
-              value={sortMode}
-              onChange={(event) =>
-                setSortMode(event.target.value as SortMode)
-              }
-              className="rounded-2xl border border-white/10 bg-[#101014] px-4 py-3 text-sm text-white outline-none focus:border-[#8cff00]/50"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="highestProfit">Highest profit</option>
-              <option value="highestROI">Highest ROI</option>
-              <option value="lowestBuy">Lowest buy price</option>
-            </select>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <SortLink
+              label="Newest"
+              active={sort === "newest"}
+              href={buildHref({ status, sort: "newest" })}
+            />
+            <SortLink
+              label="Top Profit"
+              active={sort === "highestProfit"}
+              href={buildHref({ status, sort: "highestProfit" })}
+            />
           </div>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filteredFlips.map((flip) => {
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-center text-sm font-bold text-white/75 backdrop-blur-md">
+          <span className="text-white">{flips.length}</span> shown ·{" "}
+          <span className="text-white">{totalFlips}</span> flips ·{" "}
+          <span className="text-[#8cff00]">{activeFlips}</span> active ·{" "}
+          <span className="text-[#8cff00]">{soldFlips}</span> sold ·{" "}
+          <span className="text-[#8cff00]">{formatMoney(totalProfit)}</span>{" "}
+          profit
+        </div>
+
+        <div className="mt-6 flex flex-col gap-6">
+          {flips.map((flip) => {
             const profit = getProfit(flip);
             const roi = getROI(flip);
             const saleValue =
@@ -207,29 +141,29 @@ export default function FlipLogClient({ flips }: { flips: FlipItem[] }) {
             return (
               <article
                 key={flip.id}
-                className="overflow-hidden rounded-[2rem] border border-white/10 bg-black/50 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-md"
+                className="overflow-hidden rounded-[2rem] border border-white/10 bg-black/65 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-md"
               >
-                <div className="relative h-56 bg-white/5">
+                <div className="relative h-80 bg-white/5 sm:h-[420px]">
                   {flip.photoUrl ? (
                     <Image
                       src={flip.photoUrl}
                       alt={flip.title}
                       fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover"
+                      sizes="720px"
+                      className="object-contain p-2"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-sm font-black uppercase tracking-[0.2em] text-white/30">
+                    <div className="flex h-full items-center justify-center text-base font-black uppercase tracking-[0.16em] text-white/30">
                       No Photo
                     </div>
                   )}
 
                   <div className="absolute left-4 top-4">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.18em] ${
+                      className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.12em] ${
                         flip.status === "sold"
                           ? "bg-[#8cff00] text-black"
-                          : "bg-white/15 text-white"
+                          : "bg-purple-600 text-white"
                       }`}
                     >
                       {flip.status}
@@ -237,22 +171,26 @@ export default function FlipLogClient({ flips }: { flips: FlipItem[] }) {
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <h2 className="text-2xl font-black uppercase tracking-tight">
+                <div className="p-5 sm:p-6">
+                  <h2 className="text-3xl font-black uppercase leading-tight tracking-tight">
                     {flip.title}
                   </h2>
 
-                  <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-white/40">
-                    Added by {flip.addedBy} • {flip.createdAtDisplay}
+                  <p className="mt-3 text-sm font-bold uppercase tracking-[0.08em] text-white/45">
+                    Added by {flip.addedBy}
+                  </p>
+
+                  <p className="mt-1 text-sm text-white/40">
+                    {flip.createdAtDisplay}
                   </p>
 
                   {flip.notes && (
-                    <p className="mt-4 text-sm leading-6 text-white/65">
+                    <p className="mt-4 text-base leading-7 text-white/70">
                       {flip.notes}
                     </p>
                   )}
 
-                  <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+                  <div className="mt-5 grid grid-cols-2 gap-3">
                     <MiniStat label="Buy" value={formatMoney(flip.buy)} />
                     <MiniStat
                       label={flip.status === "sold" ? "Sold For" : "Target"}
@@ -263,7 +201,7 @@ export default function FlipLogClient({ flips }: { flips: FlipItem[] }) {
                   </div>
 
                   {flip.status === "sold" && flip.soldAtDisplay && (
-                    <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-[#8cff00]/80">
+                    <p className="mt-5 rounded-2xl border border-[#8cff00]/20 bg-[#8cff00]/10 px-4 py-4 text-sm font-black uppercase tracking-[0.1em] text-[#8cff00]">
                       Sold: {flip.soldAtDisplay}
                     </p>
                   )}
@@ -273,13 +211,13 @@ export default function FlipLogClient({ flips }: { flips: FlipItem[] }) {
           })}
         </div>
 
-        {filteredFlips.length === 0 && (
-          <div className="mt-10 rounded-[2rem] border border-white/10 bg-black/45 p-8 text-center backdrop-blur-md">
-            <h2 className="text-2xl font-black uppercase tracking-tight">
+        {flips.length === 0 && (
+          <div className="mt-6 rounded-[2rem] border border-white/10 bg-black/60 p-8 text-center backdrop-blur-md">
+            <h2 className="text-3xl font-black uppercase tracking-tight">
               No flips found.
             </h2>
-            <p className="mt-3 text-sm text-white/60">
-              Nothing matches the current filter or search.
+            <p className="mt-3 text-base text-white/60">
+              Nothing matches that filter.
             </p>
           </div>
         )}
@@ -288,26 +226,59 @@ export default function FlipLogClient({ flips }: { flips: FlipItem[] }) {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function FilterLink({
+  label,
+  active,
+  href,
+}: {
+  label: string;
+  active: boolean;
+  href: string;
+}) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/45 p-5 backdrop-blur-md">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
-        {value}
-      </p>
-    </div>
+    <Link
+      href={href}
+      className={`rounded-2xl px-3 py-3 text-center text-sm font-black uppercase active:scale-95 ${
+        active
+          ? "bg-[#8cff00] text-black"
+          : "border border-white/10 bg-white/10 text-white/70"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function SortLink({
+  label,
+  active,
+  href,
+}: {
+  label: string;
+  active: boolean;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-2xl px-3 py-3 text-center text-sm font-black uppercase active:scale-95 ${
+        active
+          ? "bg-purple-600 text-white"
+          : "border border-white/10 bg-white/10 text-white/70"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-white/35">
+      <p className="text-xs font-black uppercase tracking-[0.1em] text-white/40">
         {label}
       </p>
-      <p className="mt-1 text-base font-black text-white">{value}</p>
+      <p className="mt-1 text-lg font-black text-white">{value}</p>
     </div>
   );
 }

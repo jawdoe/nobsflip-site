@@ -19,6 +19,38 @@ export type FlipItem = {
   actualSell: number | null;
 };
 
+export type EbayDraftInput = {
+  flipId: string;
+  title: string;
+  description: string | null;
+  conditionName: string;
+  categoryName: string | null;
+  buyNowPrice: number;
+  freePostage: boolean;
+  postageCost: number;
+  allowOffers: boolean;
+  autoAcceptPrice: number | null;
+  autoDeclinePrice: number | null;
+  imageUrls: string[];
+};
+
+export type EbayDraftRow = {
+  id: string;
+  flip_id: string;
+  ebay_sku: string;
+  ebay_status: string;
+  title: string;
+  description: string | null;
+  condition_name: string | null;
+  category_name: string | null;
+  buy_now_price: number;
+  free_postage: boolean | null;
+  postage_cost: number | null;
+  allow_offers: boolean | null;
+  auto_accept_price: number | null;
+  auto_decline_price: number | null;
+};
+
 type FlipPostRow = {
   id: string;
   title: string | null;
@@ -34,6 +66,8 @@ type FlipPostRow = {
 };
 
 const TABLE_NAME = 'flip_posts';
+const EBAY_LISTINGS_TABLE = 'ebay_listings';
+const EBAY_IMAGES_TABLE = 'ebay_listing_images';
 
 const dataDir = path.join(process.cwd(), 'data');
 const filePath = path.join(dataDir, 'flips.json');
@@ -98,6 +132,17 @@ function mapUpdatesToRow(updates: Partial<FlipItem>) {
   return rowUpdates;
 }
 
+function makeEbaySku(flipId: string): string {
+  const cleanId = flipId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  return `NBS-${cleanId}`;
+}
+
+function normaliseImageUrls(imageUrls: string[]): string[] {
+  return imageUrls
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
 // --------------------
 // EXISTING JSON HELPERS
 // keep these for now so other commands do not break
@@ -158,6 +203,78 @@ export async function insertFlip(flip: FlipItem): Promise<void> {
   if (error) {
     throw new Error(`Failed to insert flip: ${error.message}`);
   }
+}
+
+export async function insertEbayDraft(input: EbayDraftInput): Promise<EbayDraftRow> {
+  const imageUrls = normaliseImageUrls(input.imageUrls);
+  const ebaySku = makeEbaySku(input.flipId);
+
+  const draftReady = Boolean(
+    input.title &&
+      input.conditionName &&
+      input.buyNowPrice > 0 &&
+      imageUrls.length > 0
+  );
+
+  const ebayListingInsert = {
+    flip_id: input.flipId,
+    ebay_sku: ebaySku,
+
+    ebay_status: draftReady ? 'ready' : 'draft',
+    draft_ready: draftReady,
+
+    title: input.title,
+    description: input.description,
+    condition_name: input.conditionName,
+
+    category_name: input.categoryName,
+
+    buy_now_price: input.buyNowPrice,
+    quantity: 1,
+    currency: 'AUD',
+    marketplace_id: 'EBAY_AU',
+
+    allow_offers: input.allowOffers,
+    auto_accept_price: input.autoAcceptPrice,
+    auto_decline_price: input.autoDeclinePrice,
+
+    free_postage: input.freePostage,
+    postage_cost: input.freePostage ? 0 : input.postageCost,
+
+    listing_format: 'FIXED_PRICE',
+    duration: 'GTC',
+    ebay_enabled: true,
+  };
+
+  const { data: ebayListing, error: ebayListingError } = await supabase
+    .from(EBAY_LISTINGS_TABLE)
+    .insert(ebayListingInsert)
+    .select()
+    .single();
+
+  if (ebayListingError) {
+    throw new Error(`Failed to insert eBay draft: ${ebayListingError.message}`);
+  }
+
+  const typedEbayListing = ebayListing as EbayDraftRow;
+
+  if (imageUrls.length > 0) {
+    const imageRows = imageUrls.map((imageUrl, index) => ({
+      ebay_listing_id: typedEbayListing.id,
+      image_url: imageUrl,
+      sort_order: index,
+    }));
+
+    const { error: imageError } = await supabase
+      .from(EBAY_IMAGES_TABLE)
+      .insert(imageRows);
+
+    if (imageError) {
+      throw new Error(`Failed to insert eBay images: ${imageError.message}`);
+    }
+  }
+
+  return typedEbayListing;
 }
 
 export async function getAllFlips(): Promise<FlipItem[]> {

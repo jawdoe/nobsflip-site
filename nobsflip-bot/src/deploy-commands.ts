@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { REST, Routes } from 'discord.js';
+
 import ping from './commands/ping';
 import flipAdd from './commands/flip-add';
 import flipList from './commands/flip-list';
@@ -8,6 +9,10 @@ import flipView from './commands/flip-view';
 import flipEdit from './commands/flip-edit';
 import flipDelete from './commands/flip-delete';
 import profit from './commands/profit';
+import ebayCreateDraft from './commands/ebay-create-draft';
+import ebayPublish from './commands/ebay-publish';
+import ebayAuthCheck from './commands/ebay-auth-check';
+import ebayTestInventory from './commands/ebay-test-inventory';
 
 async function main(): Promise<void> {
   if (!process.env.DISCORD_TOKEN) {
@@ -22,20 +27,26 @@ async function main(): Promise<void> {
     throw new Error('Missing DISCORD_GUILD_ID');
   }
 
-  const commands = [
-    ping.data.toJSON(),
-    flipAdd.data.toJSON(),
-    flipList.data.toJSON(),
-    flipSold.data.toJSON(),
-    flipView.data.toJSON(),
-    flipEdit.data.toJSON(),
-    flipDelete.data.toJSON(),
-    profit.data.toJSON(),
+  const commandList = [
+    ping,
+    flipAdd,
+    flipList,
+    flipSold,
+    flipView,
+    flipEdit,
+    flipDelete,
+    profit,
+    ebayCreateDraft,
+    ebayPublish,
+    ebayAuthCheck,
+    ebayTestInventory,
   ];
+
+  const commands = commandList.map(command => command.data.toJSON());
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
-  console.log('Refreshing application commands...');
+  console.log(`Refreshing ${commands.length} application commands...`);
 
   await rest.put(
     Routes.applicationGuildCommands(

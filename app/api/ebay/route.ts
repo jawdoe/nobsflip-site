@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+type Verdict = "BUY" | "MAYBE" | "SKIP";
+
 type EbayItem = {
   title?: string;
   itemWebUrl?: string;
@@ -17,6 +19,7 @@ type EbayItem = {
 
 function median(values: number[]) {
   if (!values.length) return 0;
+
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
 
@@ -25,16 +28,21 @@ function median(values: number[]) {
     : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
-function getVerdict(profit: number, roi: number, soldCount: number) {
-  if (soldCount < 3) return "SKIP";
-  if (profit >= 10 && roi >= 100 && soldCount >= 5) return "BUY";
-  if (profit >= 5 && roi >= 50) return "MAYBE";
+function cleanNumber(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Number(value.toFixed(2));
+}
+
+function getVerdict(profit: number, roi: number, listingCount: number): Verdict {
+  if (listingCount < 3) return "SKIP";
+  if (profit >= 15 && roi >= 100 && listingCount >= 5) return "BUY";
+  if (profit >= 8 && roi >= 50) return "MAYBE";
   return "SKIP";
 }
 
 async function getEbayToken() {
-  const clientId = process.env.EBAY_CLIENT_ID;
-  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+  const clientId = process.env.EBAY_CLIENT_ID?.trim();
+  const clientSecret = process.env.EBAY_CLIENT_SECRET?.trim();
 
   if (!clientId || !clientSecret) {
     throw new Error("Missing EBAY_CLIENT_ID or EBAY_CLIENT_SECRET");
@@ -52,6 +60,7 @@ async function getEbayToken() {
       grant_type: "client_credentials",
       scope: "https://api.ebay.com/oauth/api_scope",
     }),
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -59,6 +68,11 @@ async function getEbayToken() {
   }
 
   const data = await response.json();
+
+  if (!data.access_token) {
+    throw new Error("eBay token response did not include an access token");
+  }
+
   return data.access_token as string;
 }
 
@@ -66,8 +80,9 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
-    const query = searchParams.get("query");
-    const barcode = searchParams.get("barcode");
+    const query = searchParams.get("query")?.trim();
+    const barcode = searchParams.get("barcode")?.trim();
+
     const buyPrice = Number(searchParams.get("buy") ?? 0);
     const postage = Number(searchParams.get("postage") ?? 0);
 
@@ -81,7 +96,8 @@ export async function GET(request: NextRequest) {
     const token = await getEbayToken();
 
     const ebayParams = new URLSearchParams({
-      limit: "20",
+      limit: "30",
+      filter: "buyingOptions:{FIXED_PRICE}",
     });
 
     if (barcode) {
@@ -97,6 +113,7 @@ export async function GET(request: NextRequest) {
         Authorization: `Bearer ${token}`,
         "X-EBAY-C-MARKETPLACE-ID": "EBAY_AU",
       },
+      cache: "no-store",
     });
 
     if (!ebayResponse.ok) {
@@ -104,12 +121,11 @@ export async function GET(request: NextRequest) {
     }
 
     const ebayData = await ebayResponse.json();
-
     const items: EbayItem[] = ebayData.itemSummaries ?? [];
 
     const prices = items
       .map((item) => Number(item.price?.value ?? 0))
-      .filter((price) => price > 0);
+      .filter((price) => Number.isFinite(price) && price > 0);
 
     const averagePrice =
       prices.length > 0
@@ -121,6 +137,7 @@ export async function GET(request: NextRequest) {
     const estimatedSalePrice = medianPrice || averagePrice;
 
     const ebayFeeEstimate = estimatedSalePrice * 0.14;
+
     const estimatedProfit =
       estimatedSalePrice - buyPrice - postage - ebayFeeEstimate;
 
@@ -130,22 +147,25 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       search: barcode ?? query,
-      buyPrice,
-      postage,
+      dataSource: "ACTIVE_EBAY_LISTINGS",
+      warning:
+        "This estimate is based on active eBay listings, not sold comps. Sold-history access requires eBay Marketplace Insights access.",
+      buyPrice: cleanNumber(buyPrice),
+      postage: cleanNumber(postage),
       resultCount: items.length,
-      averagePrice: Number(averagePrice.toFixed(2)),
-      medianPrice: Number(medianPrice.toFixed(2)),
-      estimatedSalePrice: Number(estimatedSalePrice.toFixed(2)),
-      ebayFeeEstimate: Number(ebayFeeEstimate.toFixed(2)),
-      estimatedProfit: Number(estimatedProfit.toFixed(2)),
-      roi: Number(roi.toFixed(2)),
+      averagePrice: cleanNumber(averagePrice),
+      medianPrice: cleanNumber(medianPrice),
+      estimatedSalePrice: cleanNumber(estimatedSalePrice),
+      ebayFeeEstimate: cleanNumber(ebayFeeEstimate),
+      estimatedProfit: cleanNumber(estimatedProfit),
+      roi: cleanNumber(roi),
       verdict,
       items: items.slice(0, 10).map((item) => ({
-        title: item.title,
-        price: item.price?.value,
-        currency: item.price?.currency,
-        condition: item.condition,
-        url: item.itemWebUrl,
+        title: item.title ?? "Untitled listing",
+        price: item.price?.value ?? "0",
+        currency: item.price?.currency ?? "AUD",
+        condition: item.condition ?? "Unknown",
+        url: item.itemWebUrl ?? "#",
       })),
     });
   } catch (error) {

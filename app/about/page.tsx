@@ -31,139 +31,163 @@ export default function AboutPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#07070a] text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[url('/outback-dunny-bg.png')] bg-cover bg-center bg-no-repeat opacity-20 md:opacity-40" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-[#07070a]/88 to-[#07070a]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(57,255,20,0.08),transparent_35%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(91,33,182,0.10),transparent_38%)]" />
+        <div className="absolute inset-0 bg-[url('/outback-dunny-bg.png')] bg-cover bg-center bg-no-repeat opacity-20 md:opacity-35" />
+        <div className="absolute inset-0 bg-black/84" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.2),transparent_34%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_32%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/82 to-black/55" />
       </div>
 
-      <section className="relative z-10 mx-auto w-full max-w-md px-4 pb-10 pt-4 md:max-w-5xl md:px-8 md:pb-24 md:pt-20">
-        <div className="rounded-[2rem] border border-white/10 bg-black/72 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-md md:p-10">
-          <div className="inline-flex rounded-full border border-orange-400/35 bg-orange-400/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-orange-300 md:text-xs">
-            About NoBSFlips
-          </div>
+      <section className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-32 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-16">
+        <div className="grid gap-6 lg:grid-cols-[1fr,0.72fr] lg:items-start">
+          <div className="rounded-[2rem] border border-white/10 bg-black/72 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-md md:p-10">
+            <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:text-xs">
+              About NoBSFlips
+            </div>
 
-          <h1 className="mt-5 text-[2.8rem] font-black uppercase leading-[0.9] tracking-tight md:text-7xl">
-            The point
-            <span className="block text-[#39FF14]">of this.</span>
-          </h1>
+            <h1 className="mt-5 text-[2.8rem] font-black uppercase leading-[0.9] tracking-tight text-white md:text-7xl">
+              The point
+              <span className="block text-purple-300">of this.</span>
+            </h1>
 
-          <p className="mt-6 text-sm leading-7 text-white/78 md:max-w-3xl md:text-lg md:leading-8">
-            NoBSFlips is a public flipping journey. Not fake guru stuff.
-            Not rented Lambos. Not pretending every item is a massive win.
-          </p>
-
-          <p className="mt-5 text-sm leading-7 text-white/65 md:max-w-3xl md:text-lg md:leading-8">
-            The goal is simple: buy stuff, test ideas, learn from the numbers,
-            and show the full process publicly — including the mistakes, slow
-            movers, and bad buys.
-          </p>
-
-          <p className="mt-5 text-sm leading-7 text-white/65 md:max-w-3xl md:text-lg md:leading-8">
-            Over time this becomes: a real flip log, a content journey, and
-            eventually tools/apps built from actual experience instead of
-            theory.
-          </p>
-
-          <div className="mt-8 overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-[0_0_30px_rgba(0,0,0,0.35)]">
-            {INTRO_VIDEO_URL ? (
-              <iframe
-                src={INTRO_VIDEO_URL}
-                title="NoBSFlips Intro"
-                className="aspect-video w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            ) : (
-              <div className="flex aspect-video items-center justify-center bg-[radial-gradient(circle_at_center,rgba(91,33,182,0.12),rgba(0,0,0,1)_62%)]">
-                <div className="px-6 text-center">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#5B21B6] text-4xl font-black text-white shadow-[0_0_20px_rgba(91,33,182,0.35)]">
-                    ▶
-                  </div>
-
-                  <p className="mt-5 text-base font-black uppercase tracking-[0.16em] text-white">
-                    Intro video coming soon
-                  </p>
-
-                  <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/45">
-                    This will permanently explain the journey, the flip log,
-                    the content, and where NoBSFlips is heading.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <InfoCard
-              color="text-[#39FF14]"
-              label="Real Numbers"
-              title="No fake wins"
-              text="Every flip is tracked publicly. Good or bad."
-            />
-
-            <InfoCard
-              color="text-[#8B5CF6]"
-              label="Real Journey"
-              title="Built in public"
-              text="The videos, website, and tools evolve as the journey evolves."
-            />
-
-            <InfoCard
-              color="text-orange-300"
-              label="Real Learning"
-              title="Trial and error"
-              text="Testing what actually works instead of pretending to know everything already."
-            />
-          </div>
-
-          <div className="mt-8 flex flex-col gap-3 md:flex-row">
-            <Link
-              href="/fliplog"
-              className="flex h-12 items-center justify-center rounded-2xl bg-[#39FF14] px-6 text-xs font-black uppercase tracking-[0.14em] text-black transition hover:bg-[#7CFF5B]"
-            >
-              View Flip Log
-            </Link>
-
-            <Link
-              href="/media"
-              className="flex h-12 items-center justify-center rounded-2xl border border-[#8B5CF6]/35 bg-[#8B5CF6]/10 px-6 text-xs font-black uppercase tracking-[0.14em] text-[#A78BFA] transition hover:border-[#8B5CF6]/60 hover:bg-[#8B5CF6]/20"
-            >
-              Watch Media
-            </Link>
-          </div>
-
-          <div className="mt-10 border-t border-white/10 pt-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/40">
-              Follow The Journey
+            <p className="mt-6 text-sm leading-7 text-white/80 md:max-w-3xl md:text-lg md:leading-8">
+              NoBSFlips is a public flipping journal. Not fake guru stuff. Not
+              rented Lambos. Not pretending every item is a massive win.
             </p>
 
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              <SocialLink
-                href="https://youtube.com"
-                label="YouTube"
-                className="border-red-500/50 bg-red-500/20 shadow-[0_0_25px_rgba(239,68,68,0.20)] hover:border-red-400 hover:bg-red-500/30"
-              >
-                <YouTubeIcon />
-              </SocialLink>
+            <p className="mt-5 text-sm leading-7 text-white/68 md:max-w-3xl md:text-lg md:leading-8">
+              The goal is simple: buy stuff, test ideas, learn from the numbers,
+              and show the full process publicly — including the mistakes, slow
+              movers, and bad buys.
+            </p>
 
-              <SocialLink
-                href="https://instagram.com"
-                label="Instagram"
-                className="border-pink-500/50 bg-pink-500/20 shadow-[0_0_25px_rgba(236,72,153,0.22)] hover:border-pink-400 hover:bg-pink-500/30"
-              >
-                <InstagramIcon />
-              </SocialLink>
+            <p className="mt-5 text-sm leading-7 text-white/68 md:max-w-3xl md:text-lg md:leading-8">
+              Over time this becomes a real results journal: what was bought,
+              what it listed for, what it sold for, how long it took, and what
+              actually worked.
+            </p>
 
-              <SocialLink
-                href="https://discord.gg"
-                label="Discord"
-                className="border-indigo-500/40 bg-indigo-500/15 shadow-[0_0_20px_rgba(99,102,241,0.15)] hover:border-indigo-400 hover:bg-indigo-500/25"
+            <div className="mt-8 overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-[0_0_30px_rgba(0,0,0,0.35)]">
+              {INTRO_VIDEO_URL ? (
+                <iframe
+                  src={INTRO_VIDEO_URL}
+                  title="NoBSFlips Intro"
+                  className="aspect-video w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="flex aspect-video items-center justify-center bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.16),rgba(0,0,0,1)_62%)]">
+                  <div className="px-6 text-center">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-purple-600 text-4xl font-black text-white shadow-[0_0_24px_rgba(147,51,234,0.4)]">
+                      ▶
+                    </div>
+
+                    <p className="mt-5 text-base font-black uppercase tracking-[0.16em] text-white">
+                      Intro video coming soon
+                    </p>
+
+                    <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/50">
+                      This will explain the journey, the flip log, the content,
+                      and where NoBSFlips is heading.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 md:flex-row">
+              <Link
+                href="/fliplog"
+                className="flex h-12 items-center justify-center rounded-2xl bg-purple-600 px-6 text-xs font-black uppercase tracking-[0.14em] text-white shadow-[0_0_22px_rgba(147,51,234,0.28)] transition hover:scale-[1.01] hover:bg-purple-500"
               >
-                <DiscordIcon />
-              </SocialLink>
+                View Flip Log
+              </Link>
+
+              <Link
+                href="/dashboard"
+                className="flex h-12 items-center justify-center rounded-2xl border border-purple-400/35 bg-purple-500/10 px-6 text-xs font-black uppercase tracking-[0.14em] text-purple-100 transition hover:border-purple-300/60 hover:bg-purple-500/20"
+              >
+                View Dashboard
+              </Link>
+
+              <Link
+                href="/media"
+                className="flex h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-6 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/[0.08]"
+              >
+                Watch Media
+              </Link>
             </div>
           </div>
+
+          <aside className="grid gap-6">
+            <div className="rounded-[2rem] border border-white/10 bg-black/72 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-md">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">
+                What it is
+              </p>
+
+              <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-white">
+                A results journal.
+              </h2>
+
+              <p className="mt-4 text-sm leading-7 text-white/68">
+                The site tracks the journey, not just the wins. Bought price,
+                listed price, sold price, ROI, days to sell, and lessons learned.
+              </p>
+            </div>
+
+            <div className="grid gap-4">
+              <InfoCard
+                label="Real Numbers"
+                title="No fake wins"
+                text="Every flip can be tracked publicly. Good or bad."
+              />
+
+              <InfoCard
+                label="Real Journey"
+                title="Built in public"
+                text="The videos, website, and tools evolve as the journey evolves."
+              />
+
+              <InfoCard
+                label="Real Learning"
+                title="Trial and error"
+                text="Testing what actually works instead of pretending to know everything already."
+              />
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-black/72 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-md">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/42">
+                Follow The Journey
+              </p>
+
+              <div className="mt-5 grid grid-cols-3 gap-3">
+                <SocialLink
+                  href="https://youtube.com"
+                  label="YouTube"
+                  className="border-purple-400/35 bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.16)] hover:border-purple-300/60 hover:bg-purple-500/20"
+                >
+                  <YouTubeIcon />
+                </SocialLink>
+
+                <SocialLink
+                  href="https://instagram.com"
+                  label="Instagram"
+                  className="border-purple-400/35 bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.16)] hover:border-purple-300/60 hover:bg-purple-500/20"
+                >
+                  <InstagramIcon />
+                </SocialLink>
+
+                <SocialLink
+                  href="https://discord.gg"
+                  label="Discord"
+                  className="border-purple-400/35 bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.16)] hover:border-purple-300/60 hover:bg-purple-500/20"
+                >
+                  <DiscordIcon />
+                </SocialLink>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -179,25 +203,23 @@ export default function AboutPage() {
 }
 
 function InfoCard({
-  color,
   label,
   title,
   text,
 }: {
-  color: string;
   label: string;
   title: string;
   text: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${color}`}>
+    <div className="rounded-2xl border border-white/10 bg-black/72 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.28)] backdrop-blur-md">
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">
         {label}
       </p>
 
-      <h3 className="mt-3 text-xl font-black uppercase">{title}</h3>
+      <h3 className="mt-3 text-xl font-black uppercase text-white">{title}</h3>
 
-      <p className="mt-3 text-sm leading-6 text-white/65">{text}</p>
+      <p className="mt-3 text-sm leading-6 text-white/68">{text}</p>
     </div>
   );
 }

@@ -5,10 +5,13 @@
   --foreground: #ffffff;
   --muted-foreground: rgba(255, 255, 255, 0.68);
   --border: rgba(255, 255, 255, 0.1);
-  --card: rgba(255, 255, 255, 0.04);
-  --toxic-green: #8cff00;
-  --toxic-green-dark: #1f3d00;
-  --toxic-green-darker: #142800;
+  --card: rgba(255, 255, 255, 0.045);
+
+  --brand-purple: #9333ea;
+  --brand-purple-soft: #c084fc;
+  --brand-purple-dark: #581c87;
+
+  --danger-red: #fca5a5;
 }
 
 @theme inline {
@@ -60,27 +63,25 @@ select {
 }
 
 ::selection {
-  background: rgba(140, 255, 0, 0.35);
+  background: rgba(147, 51, 234, 0.42);
   color: #ffffff;
 }
 
 :focus-visible {
-  outline: 2px solid rgba(140, 255, 0, 0.65);
+  outline: 2px solid rgba(192, 132, 252, 0.75);
   outline-offset: 2px;
 }
 
-/* 🔥 TEXT STROKE */
 .text-stroke {
-  -webkit-text-stroke: 1px var(--toxic-green-dark);
-  text-shadow: 0 0 6px rgba(140, 255, 0, 0.35);
+  -webkit-text-stroke: 1px var(--brand-purple-dark);
+  text-shadow: 0 0 6px rgba(147, 51, 234, 0.35);
 }
 
 .text-stroke-heavy {
-  -webkit-text-stroke: 1.5px var(--toxic-green-darker);
-  text-shadow: 0 0 10px rgba(140, 255, 0, 0.55);
+  -webkit-text-stroke: 1.5px var(--brand-purple-dark);
+  text-shadow: 0 0 10px rgba(147, 51, 234, 0.55);
 }
 
-/* Scrollbars */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -92,15 +93,15 @@ select {
 
 ::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(140, 255, 0, 0.25);
+  background: rgba(147, 51, 234, 0.35);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(140, 255, 0, 0.4);
+  background: rgba(168, 85, 247, 0.55);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(140, 255, 0, 0.3) #07070a;
+  scrollbar-color: rgba(147, 51, 234, 0.45) #07070a;
   overflow-anchor: none;
 }

@@ -19,6 +19,27 @@ export type FlipItem = {
   soldAt: string | null;
   soldAtDisplay: string | null;
   actualSell: number | null;
+  category: string | null;
+  listingUrl: string | null;
+  listedAt: string | null;
+  listedAtDisplay: string | null;
+};
+
+type RawFlipPost = {
+  id: string | number;
+  title: string | null;
+  buy_price: number | string | null;
+  sell_price: number | string | null;
+  description: string | null;
+  image_url: string | null;
+  created_by: string | null;
+  created_at: string | null;
+  status: string | null;
+  sold_at: string | null;
+  actual_sell: number | string | null;
+  category: string | null;
+  listing_url: string | null;
+  listed_at: string | null;
 };
 
 type FilterStatus = "all" | "active" | "sold";
@@ -39,16 +60,24 @@ function getParam(params: SearchParams, key: string) {
 function formatDateTime(dateString: string | null) {
   if (!dateString) return null;
 
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) return null;
+
   return new Intl.DateTimeFormat("en-AU", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "numeric",
     minute: "2-digit",
-    second: "2-digit",
     hour12: true,
     timeZone: "Australia/Melbourne",
-  }).format(new Date(dateString));
+  }).format(date);
+}
+
+function asNumber(value: number | string | null | undefined) {
+  const numberValue = Number(value ?? 0);
+  return Number.isFinite(numberValue) ? numberValue : 0;
 }
 
 function getProfit(flip: FlipItem) {
@@ -103,8 +132,13 @@ export default async function FlipLogPage({
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#07070a] px-4 py-10 text-white">
-        <div className="mx-auto max-w-[640px]">
+      <main className="relative min-h-screen overflow-hidden bg-[#07070a] px-4 py-10 text-white">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.2),transparent_34%)]" />
+          <div className="absolute inset-0 bg-black/84" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-[640px] rounded-[2rem] border border-red-500/25 bg-red-500/10 p-6">
           <h1 className="text-3xl font-black uppercase sm:text-4xl">
             Could not load flip log
           </h1>
@@ -123,16 +157,17 @@ export default async function FlipLogPage({
     );
   }
 
-  const flips: FlipItem[] = (data ?? []).map((flip) => {
+  const flips: FlipItem[] = ((data ?? []) as RawFlipPost[]).map((flip) => {
     const createdAt = String(flip.created_at ?? new Date().toISOString());
     const soldAt = flip.sold_at ? String(flip.sold_at) : null;
+    const listedAt = flip.listed_at ? String(flip.listed_at) : null;
     const isSold = flip.status === "sold";
 
     return {
       id: String(flip.id),
       title: String(flip.title ?? "Untitled Flip"),
-      buy: Number(flip.buy_price ?? 0),
-      sell: Number(flip.sell_price ?? 0),
+      buy: asNumber(flip.buy_price),
+      sell: asNumber(flip.sell_price),
       notes: String(flip.description ?? ""),
       photoUrl: flip.image_url ?? null,
       addedBy: String(flip.created_by ?? "jawdoe"),
@@ -141,7 +176,11 @@ export default async function FlipLogPage({
       status: isSold ? "sold" : "active",
       soldAt,
       soldAtDisplay: formatDateTime(soldAt),
-      actualSell: isSold ? Number(flip.actual_sell ?? flip.sell_price ?? 0) : null,
+      actualSell: isSold ? asNumber(flip.actual_sell ?? flip.sell_price) : null,
+      category: flip.category ?? null,
+      listingUrl: flip.listing_url ?? null,
+      listedAt,
+      listedAtDisplay: formatDateTime(listedAt),
     };
   });
 
@@ -166,18 +205,11 @@ export default async function FlipLogPage({
       return 0;
     });
 
-  const sold = flips.filter((flip) => flip.status === "sold");
-  const active = flips.filter((flip) => flip.status === "active");
-  const totalProfit = sold.reduce((sum, flip) => sum + getProfit(flip), 0);
-
   return (
     <>
       <FlipLogClient
         flips={filteredFlips}
-        totalFlips={flips.length}
-        activeFlips={active.length}
-        soldFlips={sold.length}
-        totalProfit={totalProfit}
+        allFlips={flips}
         status={status}
         sort={sort}
       />

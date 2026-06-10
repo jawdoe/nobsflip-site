@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -63,7 +63,7 @@ export default function ScanPage() {
     setResult(null);
     try {
       const params = new URLSearchParams({ barcode: finalBarcode, buy: buyPrice || "0", postage: "0" });
-      const response = await fetch(`/api/sold-search?${params.toString()}`);
+      const response = await fetch("/api/sold-search?" + params.toString());
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Something went wrong");
       setResult(data);
@@ -130,10 +130,7 @@ export default function ScanPage() {
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.12),transparent_40%)]" />
       </div>
-
       <div className="relative mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
-
-        {/* Header */}
         <div className="mb-8">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">
             NoBSFlips / Scanner
@@ -142,7 +139,6 @@ export default function ScanPage() {
           <p className="mt-1 text-sm text-white/50">Scan a barcode, enter your buy price, get a real verdict from actual eBay sold listings.</p>
         </div>
 
-        {/* Input bar — stacked on mobile, horizontal on desktop */}
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl md:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <input
@@ -164,19 +160,18 @@ export default function ScanPage() {
             <button
               onClick={startScanner}
               disabled={scannerOpen || scannerLoading}
-              className="rounded-2xl border border-purple-400/40 bg-purple-500/15 px-6 py-3 font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+              className="rounded-2xl border border-purple-400/40 bg-purple-500/15 px-6 py-3 font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {scannerLoading ? "Opening..." : "📷 Scan"}
+              {scannerLoading ? "Opening..." : "Scan"}
             </button>
             <button
               onClick={() => checkItem()}
               disabled={loading || !barcode.trim()}
-              className="rounded-2xl bg-purple-600 px-8 py-3 font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+              className="rounded-2xl bg-purple-600 px-8 py-3 font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Checking..." : "Check"}
             </button>
           </div>
-
           {scannerOpen && (
             <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-3">
               <div id="barcode-reader" className="overflow-hidden rounded-xl" />
@@ -191,39 +186,30 @@ export default function ScanPage() {
           <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>
         )}
 
-        {/* Results — stacked on mobile, two-column on desktop */}
         {result && vc && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.4fr]">
-
-            {/* Left: verdict + stats */}
             <div className="space-y-4">
-              <div className={`rounded-[2rem] border p-8 text-center ${vc.border} ${vc.bg}`}>
+              <div className={"rounded-[2rem] border p-8 text-center " + vc.border + " " + vc.bg}>
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-white/50">Verdict</p>
-                <h2 className={`mt-3 text-5xl font-black md:text-6xl ${vc.text}`}>{vc.label}</h2>
+                <h2 className={"mt-3 text-5xl font-black md:text-6xl " + vc.text}>{vc.label}</h2>
                 <p className="mt-3 text-sm text-white/50">Based on {result.resultCount} real sold listings</p>
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <StatCard label="Median sold" value={formatMoney(result.medianPrice)} />
                 <StatCard label="Average sold" value={formatMoney(result.averagePrice)} />
                 <StatCard label="Est. profit" value={formatMoney(result.estimatedProfit)} highlight={result.estimatedProfit > 0} />
-                <StatCard label="ROI" value={`${result.roi.toFixed(0)}%`} highlight={result.roi > 0} />
+                <StatCard label="ROI" value={result.roi.toFixed(0) + "%"} highlight={result.roi > 0} />
               </div>
-
               {result.warning && (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-xs leading-5 text-white/45">
-                  {result.warning}
-                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-xs leading-5 text-white/45">{result.warning}</div>
               )}
             </div>
-
-            {/* Right: sold listings */}
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 md:p-5">
               <h3 className="mb-3 text-base font-black uppercase tracking-tight">Sold Listings</h3>
               <div className="space-y-2 lg:max-h-[600px] lg:overflow-y-auto lg:pr-1">
                 {result.items.map((item, index) => (
                   
-                    key={`${item.url}-${index}`}
+                    key={item.url + index}
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
@@ -238,7 +224,6 @@ export default function ScanPage() {
                 ))}
               </div>
             </div>
-
           </div>
         )}
       </div>
@@ -250,7 +235,7 @@ function StatCard({ label, value, highlight = false }: { label: string; value: s
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
       <p className="text-xs font-black uppercase tracking-[0.15em] text-white/40">{label}</p>
-      <p className={`mt-2 text-xl font-black ${highlight ? "text-purple-300" : "text-white"}`}>{value}</p>
+      <p className={"mt-2 text-xl font-black " + (highlight ? "text-purple-300" : "text-white")}>{value}</p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 function DiscordIcon() {
   return (
@@ -16,10 +16,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.12),transparent_34%)]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/84 to-black/40" />
       </div>
-
       <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-24 pt-12 sm:px-6 md:px-8 md:pt-20">
-
-        {/* Hero — centered on mobile, two-column on desktop */}
         <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:text-xs">
@@ -41,8 +38,6 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-
-          {/* Verdict cards — stacked on right on desktop, grid below on mobile */}
           <div className="grid grid-cols-1 gap-3">
             <div className="rounded-[2rem] border border-green-500/25 bg-green-500/10 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
               <div className="flex items-center gap-4">
@@ -67,8 +62,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* How it works */}
         <div className="mt-20">
           <p className="text-center text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">How It Works</p>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -77,8 +70,6 @@ export default function HomePage() {
             <Step num="3" title="Get your verdict" body="Enter your buy price and get a straight Yes, Maybe, or Hell No." />
           </div>
         </div>
-
-        {/* Discord */}
         <div className="mt-16 rounded-[2rem] border border-purple-500/20 bg-purple-500/5 p-8 lg:flex lg:items-center lg:justify-between lg:gap-12">
           <div className="flex items-center gap-5">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-purple-600/20 text-purple-300">
@@ -91,16 +82,10 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          
-            href="https://discord.gg/bvThRRf9Y5"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-6 inline-flex shrink-0 items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0"
-          >
+          <a href="https://discord.gg/bvThRRf9Y5" target="_blank" rel="noreferrer" className="mt-6 inline-flex shrink-0 items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0">
             Join Now
           </a>
         </div>
-
       </section>
     </main>
   );

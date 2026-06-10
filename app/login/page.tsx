@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? "/scan";
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -33,7 +33,7 @@ function LoginForm() {
         window.location.href = redirectTo;
       }
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -43,8 +43,11 @@ function LoginForm() {
       if (error) {
         setError(error.message);
         setLoading(false);
+      } else if (data.session) {
+        // Email confirmation is off — signed in immediately
+        window.location.href = redirectTo;
       } else {
-        setSuccess("Check your email for a confirmation link before signing in.");
+        setSuccess("Account created! Check your email for a confirmation link, then sign in.");
         setLoading(false);
       }
     }
@@ -69,21 +72,13 @@ function LoginForm() {
           <div className="mb-6 flex rounded-2xl border border-white/10 bg-white/[0.04] p-1">
             <button
               onClick={() => { setMode("signin"); setError(""); setSuccess(""); }}
-              className={`flex-1 rounded-xl py-2 text-sm font-black uppercase tracking-[0.08em] transition-all ${
-                mode === "signin"
-                  ? "bg-purple-600 text-white shadow-[0_0_16px_rgba(147,51,234,0.3)]"
-                  : "text-white/50 hover:text-white"
-              }`}
+              className={"flex-1 rounded-xl py-2 text-sm font-black uppercase tracking-[0.08em] transition-all " + (mode === "signin" ? "bg-purple-600 text-white shadow-[0_0_16px_rgba(147,51,234,0.3)]" : "text-white/50 hover:text-white")}
             >
               Sign In
             </button>
             <button
               onClick={() => { setMode("signup"); setError(""); setSuccess(""); }}
-              className={`flex-1 rounded-xl py-2 text-sm font-black uppercase tracking-[0.08em] transition-all ${
-                mode === "signup"
-                  ? "bg-purple-600 text-white shadow-[0_0_16px_rgba(147,51,234,0.3)]"
-                  : "text-white/50 hover:text-white"
-              }`}
+              className={"flex-1 rounded-xl py-2 text-sm font-black uppercase tracking-[0.08em] transition-all " + (mode === "signup" ? "bg-purple-600 text-white shadow-[0_0_16px_rgba(147,51,234,0.3)]" : "text-white/50 hover:text-white")}
             >
               Sign Up
             </button>
@@ -91,9 +86,7 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.15em] text-white/50">
-                Email
-              </label>
+              <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.15em] text-white/50">Email</label>
               <input
                 type="email"
                 value={email}
@@ -105,30 +98,32 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.15em] text-white/50">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="required"
-                required
-                minLength={6}
-                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/25 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30 transition"
-              />
+              <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.15em] text-white/50">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="min 6 characters"
+                  required
+                  minLength={6}
+                  className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 pr-12 text-white outline-none placeholder:text-white/25 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
 
             {error && (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                {error}
-              </div>
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>
             )}
-
             {success && (
-              <div className="rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-300">
-                {success}
-              </div>
+              <div className="rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-300">{success}</div>
             )}
 
             <button

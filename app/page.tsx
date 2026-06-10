@@ -17,7 +17,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/84 to-black/40" />
       </div>
       <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-20">
-        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-12">
           <div>
             <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:px-4 md:py-2 md:text-xs">
               NoBSFlips / eBay Flip Scanner
@@ -30,16 +30,10 @@ export default function HomePage() {
               Scan a barcode at the op shop. See real eBay sold prices from your local marketplace in your currency. Get a straight answer on whether it is worth flipping.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/scan"
-                className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500"
-              >
+              <Link href="/scan" className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500">
                 Start Scanning
               </Link>
-              <Link
-                href="/login"
-                className="flex items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25"
-              >
+              <Link href="/login" className="flex items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25">
                 Create Free Account
               </Link>
             </div>
@@ -86,7 +80,7 @@ export default function HomePage() {
             href="https://discord.gg/bvThRRf9Y5"
             target="_blank"
             rel="noreferrer"
-            className="mt-4 flex w-full items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0 lg:w-auto lg:inline-flex lg:shrink-0"
+            className="mt-4 flex w-full items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0 lg:inline-flex lg:w-auto lg:shrink-0"
           >
             Join Now
           </a>

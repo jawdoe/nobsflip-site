@@ -10,6 +10,7 @@ type FlipPost = {
   status: string | null;
   buy_price: number | null;
   sell_price: number | null;
+  actual_sell: number | null;
   image_url: string | null;
   created_at: string;
 };
@@ -80,7 +81,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,image_url,created_at").order("created_at", { ascending: false }),
+      supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,actual_sell,image_url,created_at").order("created_at", { ascending: false }),
       supabase.from("scans").select("*").order("created_at", { ascending: false }).limit(50),
     ]).then(([flipsRes, scansRes]) => {
       setFlips((flipsRes.data as FlipPost[]) ?? []);
@@ -91,7 +92,7 @@ export default function DashboardPage() {
 
   const totalInvested = flips.reduce((s, f) => s + (f.buy_price ?? 0), 0);
   const soldFlips = flips.filter((f) => f.status === "sold");
-  const totalReturned = soldFlips.reduce((s, f) => s + (f.sell_price ?? 0), 0);
+  const totalReturned = soldFlips.reduce((s, f) => s + (f.actual_sell ?? f.sell_price ?? 0), 0);
   const soldCost = soldFlips.reduce((s, f) => s + (f.buy_price ?? 0), 0);
   const netProfit = totalReturned - soldCost;
   const roi = soldCost > 0 ? (netProfit / soldCost) * 100 : 0;
@@ -177,8 +178,8 @@ export default function DashboardPage() {
                   {filteredFlips.map((flip) => {
                     const sc = statusConfig[flip.status ?? ""] ?? { color: "text-white/40", label: flip.status ?? "Unknown" };
                     const profit =
-                      flip.status === "sold" && flip.sell_price != null && flip.buy_price != null
-                        ? flip.sell_price - flip.buy_price
+                      flip.status === "sold" && flip.buy_price != null && (flip.actual_sell ?? flip.sell_price) != null
+                        ? (flip.actual_sell ?? flip.sell_price ?? 0) - flip.buy_price
                         : null;
                     return (
                       <div key={flip.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">

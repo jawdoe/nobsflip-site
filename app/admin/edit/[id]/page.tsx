@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { compressImage } from "@/lib/compress-image";
 
 export default function EditFlipPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,7 +74,8 @@ export default function EditFlipPage() {
       if (newImage) {
         const fileExt = newImage.name.split(".").pop() || "jpg";
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from("flip-images").upload(fileName, newImage, { cacheControl: "3600", upsert: false });
+        const toUpload = await compressImage(newImage);
+        const { error: uploadError } = await supabase.storage.from("flip-images").upload(fileName, toUpload, { cacheControl: "3600", upsert: false });
         if (uploadError) { setMessage("Upload error: " + uploadError.message); setSaving(false); return; }
         const { data: publicUrlData } = supabase.storage.from("flip-images").getPublicUrl(fileName);
         imageUrl = publicUrlData.publicUrl;

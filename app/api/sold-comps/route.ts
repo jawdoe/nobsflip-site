@@ -57,6 +57,42 @@ const marketplaceMap: Record<string, { globalId: string; locatedIn: string; curr
   ES: { globalId: "EBAY-ES", locatedIn: "ES", currency: "EUR", browseId: "EBAY_ES" },
 };
 
+// Resolve a barcode to a human-readable product name using free APIs.
+// Returns null if the barcode can't be resolved.
+async function resolveBarcode(barcode: string): Promise<string | null> {
+  // 1. Try UPC Item DB (works for most retail products)
+  try {
+    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`, {
+      headers: { "Accept": "application/json" },
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const title = data?.items?.[0]?.title;
+      if (title && typeof title === "string" && title.trim().length > 2) {
+        return title.trim();
+      }
+    }
+  } catch {}
+
+  // 2. Try Open Food Facts (food/grocery products)
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const name = data?.product?.product_name;
+      const brand = data?.product?.brands;
+      if (name && typeof name === "string" && name.trim().length > 2) {
+        return brand ? `${brand} ${name}`.trim() : name.trim();
+      }
+    }
+  } catch {}
+
+  return null;
+}
+
 async function getEbayToken(clientId: string, clientSecret: string): Promise<string> {
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const res = await fetch("https://api.ebay.com/identity/v1/oauth2/token", {
@@ -138,10 +174,15 @@ async function fetchBrowseApi(token: string, searchTerm: string, marketplace: ty
     .sort((a: SoldItem, b: SoldItem) => a.price - b.price);
 }
 
+// Simple heuristic: if it looks like a barcode (all digits, 8-14 chars), treat as barcode
+function looksLikeBarcode(s: string) {
+  return /^\d{8,14}$/.test(s.trim());
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
-  const barcode = searchParams.get("barcode")?.trim();
+  const rawBarcode = searchParams.get("barcode")?.trim();
   const query = searchParams.get("query")?.trim();
   const keyword = searchParams.get("keyword")?.trim();
   const buyPrice = Number(searchParams.get("buy") ?? 0);
@@ -150,8 +191,8 @@ export async function GET(req: NextRequest) {
   const country = locale.split("-")[1]?.toUpperCase() ?? "AU";
   const marketplace = marketplaceMap[country] ?? marketplaceMap["AU"];
 
-  const searchTerm = barcode || query || keyword;
-  if (!searchTerm) {
+  const rawSearchTerm = rawBarcode || query || keyword;
+  if (!rawSearchTerm) {
     return NextResponse.json({ error: "Missing barcode, query, or keyword" }, { status: 400 });
   }
 
@@ -162,10 +203,34 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing EBAY_CLIENT_ID" }, { status: 500 });
   }
 
+  // If it looks like a barcode, try to resolve it to a product name first
+  let searchTerm = rawSearchTerm;
+  let resolvedName: string | null = null;
+  let barcodeResolved = false;
+
+  if (rawBarcode && looksLikeBarcode(rawBarcode)) {
+    resolvedName = await resolveBarcode(rawBarcode);
+    if (resolvedName) {
+      searchTerm = resolvedName;
+      barcodeResolved = true;
+    }
+    // If resolution failed, searchTerm stays as the raw barcode (fallback)
+  }
+
   try {
     let items = await fetchFindingApi(clientId, searchTerm, marketplace);
     let dataSource = "EBAY_FINDING_SOLD";
     let warning = "";
+
+    // If barcode resolved but got no results, try the raw barcode as fallback
+    if (barcodeResolved && items !== null && items.length === 0) {
+      const fallbackItems = await fetchFindingApi(clientId, rawBarcode!, marketplace);
+      if (fallbackItems && fallbackItems.length > 0) {
+        items = fallbackItems;
+        searchTerm = rawBarcode!;
+        barcodeResolved = false;
+      }
+    }
 
     if (!items) {
       if (!clientSecret) {
@@ -188,7 +253,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       search: searchTerm,
-      searchType: barcode ? "BARCODE" : "QUERY",
+      resolvedFrom: barcodeResolved ? rawBarcode : null,
+      searchType: rawBarcode ? "BARCODE" : "QUERY",
       dataSource,
       warning,
       buyPrice: cleanNumber(buyPrice),

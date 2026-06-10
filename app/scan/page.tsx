@@ -5,6 +5,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type EbayResult = {
   search: string;
+  resolvedFrom: string | null;
   searchType?: "BARCODE" | "QUERY";
   dataSource: string;
   warning: string;
@@ -51,6 +52,7 @@ type ScanStep = "idle" | "price" | "camera" | "manual" | "loading";
 export default function ScanPage() {
   const [step, setStep] = useState<ScanStep>("idle");
   const [buyPrice, setBuyPrice] = useState("");
+  const [postage, setPostage] = useState("");
   const [barcode, setBarcode] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
@@ -58,14 +60,14 @@ export default function ScanPage() {
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
 
-  async function runCheck(scannedBarcode: string, price: string) {
+  async function runCheck(scannedBarcode: string, price: string, post: string) {
     setStep("loading");
     setError("");
     setResult(null);
     setSaveStatus(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
-      const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: "0", locale });
+      const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: post || "0", locale });
       const response = await fetch("/api/sold-comps?" + params.toString());
       const text = await response.text();
       let data: any;
@@ -117,7 +119,7 @@ export default function ScanPage() {
           const scanned = decodedText.trim();
           setBarcode(scanned);
           await stopCamera();
-          await runCheck(scanned, buyPrice);
+          await runCheck(scanned, buyPrice, postage);
         },
         () => {}
       );
@@ -162,7 +164,10 @@ export default function ScanPage() {
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">Scan Barcode</p>
-              {buyPrice ? <p className="text-xs text-white/40">Buy price: {formatMoney(Number(buyPrice))}</p> : null}
+              <p className="text-xs text-white/40">
+                {buyPrice ? `Buy: ${formatMoney(Number(buyPrice))}` : "No buy price set"}
+                {postage ? ` · Postage: ${formatMoney(Number(postage))}` : ""}
+              </p>
             </div>
             <button onClick={stopCamera} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">
               Cancel
@@ -178,8 +183,10 @@ export default function ScanPage() {
       {step === "price" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-white">What is the price in store?</h2>
-            <p className="mt-1 text-sm text-white/50">Enter the price tag, then scan the barcode.</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">Enter prices before scanning</h2>
+            <p className="mt-1 text-sm text-white/50">What is the price tag? Rough postage estimate?</p>
+
+            <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Buy price</label>
             <input
               autoFocus
               type="number"
@@ -188,9 +195,22 @@ export default function ScanPage() {
               onChange={(e) => setBuyPrice(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && startCamera()}
               placeholder="0.00"
-              className="mt-4 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30"
             />
-            <div className="mt-3 grid grid-cols-2 gap-3">
+
+            <label className="mt-4 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Postage / shipping cost</label>
+            <input
+              type="number"
+              min="0"
+              value={postage}
+              onChange={(e) => setPostage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && startCamera()}
+              placeholder="0.00"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30"
+            />
+            <p className="mt-1 text-xs text-white/30">Leave at 0 if you will drop-off or it is free postage.</p>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <button onClick={() => setStep("idle")} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">
                 Cancel
               </button>
@@ -225,17 +245,17 @@ export default function ScanPage() {
             </button>
           </div>
           {step === "manual" && (
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 space-y-2">
               <input
                 autoFocus
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice)}
+                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice, postage)}
                 placeholder="Enter barcode manually"
                 inputMode="numeric"
-                className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60"
+                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60"
               />
-              <button onClick={() => runCheck(barcode, buyPrice)} disabled={!barcode.trim()} className="rounded-2xl bg-purple-600 px-5 py-3 font-black text-white disabled:opacity-50">
+              <button onClick={() => runCheck(barcode, buyPrice, postage)} disabled={!barcode.trim()} className="w-full rounded-2xl bg-purple-600 px-5 py-3 font-black text-white disabled:opacity-50">
                 Go
               </button>
             </div>
@@ -248,7 +268,7 @@ export default function ScanPage() {
               <input
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice)}
+                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice, postage)}
                 placeholder="Barcode / GTIN"
                 inputMode="numeric"
                 className="flex-[2] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60 transition"
@@ -261,8 +281,16 @@ export default function ScanPage() {
                 min="0"
                 className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60 transition"
               />
+              <input
+                value={postage}
+                onChange={(e) => setPostage(e.target.value)}
+                placeholder="Postage"
+                type="number"
+                min="0"
+                className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60 transition"
+              />
               <button
-                onClick={() => runCheck(barcode, buyPrice)}
+                onClick={() => runCheck(barcode, buyPrice, postage)}
                 disabled={step === "loading" || !barcode.trim()}
                 className="rounded-2xl bg-purple-600 px-8 py-3 font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:opacity-50"
               >
@@ -288,6 +316,11 @@ export default function ScanPage() {
                 Could not save to history - make sure you are signed in
               </div>
             )}
+            {result.resolvedFrom && (
+              <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
+                Barcode <span className="font-black">{result.resolvedFrom}</span> resolved to: <span className="font-black">{result.search}</span>
+              </div>
+            )}
             {result.dataSource === "EBAY_BROWSE_ACTIVE" ? (
               <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs leading-5 text-yellow-300">
                 <span className="font-black">Heads up:</span> Showing current asking prices, not what items actually sold for.
@@ -305,11 +338,18 @@ export default function ScanPage() {
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <StatCard label="Median" value={formatMoney(result.medianPrice)} />
-              <StatCard label="Average" value={formatMoney(result.averagePrice)} />
+              <StatCard label="Median sale" value={formatMoney(result.medianPrice)} />
+              <StatCard label="eBay fees (~14%)" value={formatMoney(result.ebayFeeEstimate)} />
               <StatCard label="Est. profit" value={formatMoney(result.estimatedProfit)} highlight={result.estimatedProfit > 0} />
               <StatCard label="ROI" value={result.roi.toFixed(0) + "%"} highlight={result.roi > 0} />
             </div>
+            {(result.buyPrice > 0 || result.postage > 0) && (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/40">
+                Costs factored in: buy {formatMoney(result.buyPrice)}
+                {result.postage > 0 ? ` + postage ${formatMoney(result.postage)}` : ""}
+                {` + eBay fees ${formatMoney(result.ebayFeeEstimate)}`}
+              </div>
+            )}
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-black uppercase tracking-tight">

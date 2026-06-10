@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { compressImage } from "@/lib/compress-image";
 
 export default function AdminPage() {
   const supabase = createSupabaseBrowserClient();
@@ -48,7 +49,8 @@ export default function AdminPage() {
       if (image) {
         const fileExt = image.name.split(".").pop() || "jpg";
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from("flip-images").upload(fileName, image, { cacheControl: "3600", upsert: false });
+        const toUpload = await compressImage(image);
+        const { error: uploadError } = await supabase.storage.from("flip-images").upload(fileName, toUpload, { cacheControl: "3600", upsert: false });
         if (uploadError) { setMessage("Upload error: " + uploadError.message); setLoading(false); return; }
         const { data: publicUrlData } = supabase.storage.from("flip-images").getPublicUrl(fileName);
         imageUrl = publicUrlData.publicUrl;

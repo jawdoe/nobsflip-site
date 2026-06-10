@@ -85,7 +85,7 @@ export default function ScanPage() {
       scannerRef.current = scanner;
       await scanner.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 280, height: 180 } },
+        { fps: 10, qrbox: { width: 260, height: 260 } },
         async (decodedText: string) => {
           const scanned = decodedText.trim();
           setBarcode(scanned);
@@ -162,9 +162,9 @@ export default function ScanPage() {
               <button
                 onClick={startScanner}
                 disabled={scannerOpen || scannerLoading}
-                className="md:hidden flex-1 rounded-2xl border border-purple-400/40 bg-purple-500/15 px-6 py-3 font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                className="md:hidden flex-1 rounded-2xl bg-purple-600 px-6 py-3 font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.35)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {scannerLoading ? "Opening..." : "Scan"}
+                {scannerLoading ? "Opening..." : "📷 Scan"}
               </button>
               <button
                 onClick={() => checkItem()}
@@ -185,8 +185,9 @@ export default function ScanPage() {
                   Cancel
                 </button>
               </div>
-              <div className="flex flex-1 items-center justify-center p-4">
-                <div id="barcode-reader" className="w-full max-w-sm overflow-hidden rounded-2xl" />
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+                <div id="barcode-reader" className="w-full max-w-xs overflow-hidden rounded-2xl" />
+                <p className="text-xs text-white/40 tracking-wide">Hold the barcode steady inside the box</p>
               </div>
             </div>
           )}

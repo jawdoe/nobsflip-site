@@ -133,7 +133,7 @@ export default function ScanPage() {
   const vc = result ? verdictConfig[result.verdict] : null;
 
   return (
-    <main className="min-h-screen bg-[#07070a] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#07070a] text-white">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.12),transparent_40%)]" />
       </div>
@@ -204,7 +204,7 @@ export default function ScanPage() {
         )}
 
         {result && vc && (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+          <div className="mt-6 grid w-full gap-4 lg:grid-cols-[1fr_1.4fr]">
             <div className="space-y-3">
               <div className={"rounded-[2rem] border p-6 text-center " + vc.border + " " + vc.bg}>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Verdict</p>

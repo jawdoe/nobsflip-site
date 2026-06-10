@@ -27,9 +27,9 @@ function median(values: number[]) {
 }
 
 function getVerdict(profit: number, roi: number, soldCount: number): Verdict {
-  if (soldCount < 3) return "SKIP";
-  if (profit >= 15 && roi >= 100 && soldCount >= 5) return "BUY";
-  if (profit >= 8 && roi >= 50) return "MAYBE";
+  if (soldCount === 0) return "SKIP";
+  if (profit >= 10 && roi >= 80) return "BUY";
+  if (profit >= 4 && roi >= 30) return "MAYBE";
   return "SKIP";
 }
 

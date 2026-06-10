@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import Link from "next/link";
 
 function YouTubeIcon() {
@@ -26,169 +24,116 @@ function DiscordIcon() {
   );
 }
 
-export default async function HomePage() {
+export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#07070a] text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[url('/outback-dunny-bg.png')] bg-cover bg-center bg-no-repeat opacity-22 md:opacity-38" />
-        <div className="absolute inset-0 bg-black/82" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.22),transparent_36%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_34%)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/84 to-black/58" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.12),transparent_34%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/84 to-black/40" />
       </div>
 
-      <section className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-32 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-16">
-        <div className="grid gap-6 lg:grid-cols-[1.15fr,0.85fr] lg:items-start">
-          <div className="rounded-[2rem] border border-white/10 bg-black/72 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-md md:p-10 lg:min-h-[620px]">
-            <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:text-xs">
-              NoBSFlips / Flip Journal
-            </div>
+      <section className="relative z-10 mx-auto w-full max-w-[1200px] px-4 pb-24 pt-12 sm:px-6 md:px-8 md:pt-20">
 
-            <h1 className="mt-6 text-[3rem] font-black uppercase leading-[0.88] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
-              No Bullshit.
-              <span className="block text-purple-300">Just Flips.</span>
-            </h1>
-
-            <p className="mt-6 max-w-3xl text-base leading-8 text-white/82 md:text-xl md:leading-9">
-              I buy random stuff, list it, track the numbers, and show what
-              actually works. Wins, fails, slow movers — all of it.
-            </p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/fliplog"
-                  className="flex h-12 items-center justify-center rounded-2xl bg-purple-600 px-6 text-xs font-black uppercase tracking-[0.14em] text-white shadow-[0_0_22px_rgba(147,51,234,0.35)] transition hover:scale-[1.01] hover:bg-purple-500"
-                >
-                  View Flip Log
-                </Link>
-
-                <Link
-                  href="/media"
-                  className="flex h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-6 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/[0.08]"
-                >
-                  Watch Media
-                </Link>
-              </div>
-
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              <MiniCard label="Track" value="Buys" />
-              <MiniCard label="Measure" value="Profit" />
-              <MiniCard label="Show" value="Proof" />
-            </div>
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:text-xs">
+            NoBSFlips / eBay Flip Scanner
           </div>
 
-          <div className="grid gap-6">
-            <Panel label="Featured Video" title="Start the journey here">
-              <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_0_24px_rgba(0,0,0,0.35)]">
-                <div className="flex aspect-video items-center justify-center bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.18),rgba(0,0,0,1)_64%)]">
-                  <div className="text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-purple-600 text-3xl font-black text-white shadow-[0_0_22px_rgba(147,51,234,0.35)]">
-                      ▶
-                    </div>
+          <h1 className="mt-6 text-5xl font-black uppercase leading-[0.9] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
+            Scan It.
+            <span className="block text-purple-300">Know Instantly.</span>
+          </h1>
 
-                    <p className="mt-4 text-sm font-black uppercase tracking-[0.14em] text-white">
-                      Intro video coming soon
-                    </p>
+          <p className="mx-auto mt-6 max-w-xl text-base leading-8 text-white/75 md:text-xl md:leading-9">
+            Scan a barcode at the op shop. See real eBay sold prices from your local marketplace in your currency. Get a straight answer on whether it is worth flipping.
+          </p>
 
-                    <p className="mx-auto mt-2 max-w-xs text-xs leading-5 text-white/60">
-                      The first video people watch before diving into the flip
-                      results.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <Link
-                href="/media"
-                className="mt-5 inline-flex rounded-full border border-purple-400/40 bg-purple-500/15 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-purple-200 transition hover:border-purple-300/70 hover:bg-purple-500/25"
-              >
-                More Media
-              </Link>
-            </Panel>
-
-            <Panel label="About" title="Follow the experiment.">
-              <p className="mt-3 text-sm leading-7 text-white/75">
-                This is not fake guru flipping. It is a public journal of what
-                happens when I actually buy, list, sell, and learn from the
-                numbers.
-              </p>
-
-              <div className="mt-6 grid grid-cols-3 gap-3">
-                <SocialLink href="https://www.youtube.com/@NoBSFlips" label="YouTube">
-                  <YouTubeIcon />
-                </SocialLink>
-
-                <SocialLink href="https://www.instagram.com/nobsflipin/" label="Instagram">
-                  <InstagramIcon />
-                </SocialLink>
-
-                <SocialLink href="https://discord.gg/bvThRRf9Y5" label="Discord">
-                  <DiscordIcon />
-                </SocialLink>
-              </div>
-            </Panel>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/scan"
+              className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500"
+            >
+              Start Scanning
+            </Link>
+            <Link
+              href="/fliplog"
+              className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/[0.08]"
+            >
+              See Real Flips
+            </Link>
           </div>
         </div>
+
+        <div className="mt-16 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-[2rem] border border-green-500/25 bg-green-500/10 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+            <div className="text-3xl font-black text-green-400">YES</div>
+            <div className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-green-300/70">Buy It</div>
+            <p className="mt-3 text-sm leading-6 text-white/60">Sold prices are strong. Margin is there. Grab it.</p>
+          </div>
+
+          <div className="rounded-[2rem] border border-yellow-500/25 bg-yellow-500/10 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+            <div className="text-3xl font-black text-yellow-400">MAYBE</div>
+            <div className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-yellow-300/70">Depends on Price</div>
+            <p className="mt-3 text-sm leading-6 text-white/60">Could work if you get it cheap enough. Check the number.</p>
+          </div>
+
+          <div className="rounded-[2rem] border border-red-500/25 bg-red-500/10 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+            <div className="text-3xl font-black text-red-400">HELL NO</div>
+            <div className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-red-300/70">Walk Away</div>
+            <p className="mt-3 text-sm leading-6 text-white/60">Not selling. Not worth the risk. Leave it on the shelf.</p>
+          </div>
+        </div>
+
+        <div className="mt-16">
+          <p className="text-center text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">How It Works</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <Step num="1" title="Scan the barcode" body="Point your camera at any barcode or type the GTIN manually." />
+            <Step num="2" title="See local sold prices" body="Real completed eBay listings from your local marketplace in your currency. Not asking prices. Actual sales." />
+            <Step num="3" title="Get your verdict" body="Enter your buy price and get a straight Yes, Maybe, or Hell No." />
+          </div>
+        </div>
+
+        <div className="mt-16 rounded-[2rem] border border-white/10 bg-black/60 p-8 text-center backdrop-blur-md">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">Community</p>
+          <h2 className="mt-3 text-2xl font-black uppercase text-white md:text-3xl">Follow the flips.</h2>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-white/60">
+            Real results, no filters. Watch the videos, join the Discord, follow along on Instagram.
+          </p>
+          <div className="mt-6 flex justify-center gap-4">
+            <SocialLink href="https://www.youtube.com/@NoBSFlips" label="YouTube"><YouTubeIcon /></SocialLink>
+            <SocialLink href="https://www.instagram.com/nobsflipin/" label="Instagram"><InstagramIcon /></SocialLink>
+            <SocialLink href="https://discord.gg/bvThRRf9Y5" label="Discord"><DiscordIcon /></SocialLink>
+          </div>
+        </div>
+
       </section>
     </main>
   );
 }
 
-function Panel({
-  label,
-  title,
-  children,
-}: {
-  label: string;
-  title: string;
-  children: React.ReactNode;
-}) {
+function Step({ num, title, body }: { num: string; title: string; body: string }) {
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-black/72 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-md">
-      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">
-        {label}
-      </p>
-
-      <h2 className="mt-3 text-2xl font-black uppercase text-white md:text-3xl">
-        {title}
-      </h2>
-
-      {children}
+    <div className="rounded-[2rem] border border-white/10 bg-black/60 p-6 backdrop-blur-md">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 text-sm font-black text-white shadow-[0_0_16px_rgba(147,51,234,0.35)]">
+        {num}
+      </div>
+      <h3 className="mt-4 text-base font-black uppercase tracking-tight text-white">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-white/60">{body}</p>
     </div>
   );
 }
 
-function MiniCard({ label, value }: { label: string; value: string }) {
+function SocialLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black uppercase text-white">{value}</p>
-    </div>
-  );
-}
-
-function SocialLink({
-  href,
-  label,
-  children,
-}: {
-  href: string;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
+    
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="flex h-20 flex-col items-center justify-center rounded-2xl border border-purple-400/35 bg-purple-500/10 text-white transition hover:border-purple-300/70 hover:bg-purple-500/20"
+      className="flex h-20 w-24 flex-col items-center justify-center gap-2 rounded-2xl border border-purple-400/35 bg-purple-500/10 text-white transition hover:border-purple-300/60 hover:bg-purple-500/20"
     >
       {children}
-      <span className="mt-2 text-[10px] font-black uppercase tracking-[0.12em]">
-        {label}
-      </span>
+      <span className="text-[9px] font-black uppercase tracking-[0.14em] text-purple-300/80">{label}</span>
     </a>
   );
 }

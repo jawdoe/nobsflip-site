@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -29,12 +29,12 @@ export default function EditFlipPage() {
   const [soldAt, setSoldAt] = useState("");
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [newImage, setNewImage] = useState<File | null>(null);
+  const actualSellRef = useRef<HTMLInputElement>(null);
 
   const toDateTimeLocal = (iso: string | null) => {
     if (!iso) return "";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
-    // format: YYYY-MM-DDTHH:MM
     return d.toISOString().slice(0, 16);
   };
 
@@ -62,6 +62,13 @@ export default function EditFlipPage() {
       setLoading(false);
     });
   }, [id]);
+
+  function handleStatusChange(s: string) {
+    setStatus(s);
+    if (s === "sold") {
+      setTimeout(() => actualSellRef.current?.focus(), 50);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -160,7 +167,7 @@ export default function EditFlipPage() {
 
                 <div>
                   <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-white/45">Status</label>
-                  <select value={status} onChange={(e) => setStatus(e.target.value)}
+                  <select value={status} onChange={(e) => handleStatusChange(e.target.value)}
                     className="w-full rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 text-white outline-none transition focus:border-purple-400/45 focus:bg-purple-500/[0.08]">
                     <option value="" className="bg-[#0f1016]">Select status</option>
                     <option value="bought" className="bg-[#0f1016]">Bought</option>
@@ -197,9 +204,11 @@ export default function EditFlipPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-white/45">Actual Sold Price</label>
-                  <input type="number" value={actualSell} onChange={(e) => setActualSell(e.target.value)} min="0" step="0.01"
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 text-white outline-none transition focus:border-purple-400/45 focus:bg-purple-500/[0.08]" />
+                  <label className={"mb-2 block text-xs font-black uppercase tracking-[0.18em] transition " + (status === "sold" ? "text-green-400" : "text-white/45")}>
+                    Actual Sold Price {status === "sold" && !actualSell && <span className="normal-case font-normal text-green-400/60">← enter this!</span>}
+                  </label>
+                  <input ref={actualSellRef} type="number" value={actualSell} onChange={(e) => setActualSell(e.target.value)} min="0" step="0.01"
+                    className={"w-full rounded-2xl border px-4 py-3 text-white outline-none transition " + (status === "sold" && !actualSell ? "border-green-500/50 bg-green-500/10 focus:border-green-400/70" : "border-white/10 bg-white/[0.045] focus:border-purple-400/45 focus:bg-purple-500/[0.08]")} />
                 </div>
 
                 <div>
@@ -251,12 +260,28 @@ export default function EditFlipPage() {
             <p className="text-xs font-black uppercase tracking-[0.24em] text-purple-300">Quick Status</p>
             <div className="mt-4 grid grid-cols-3 gap-2">
               {(["bought", "listed", "sold"] as const).map((s) => (
-                <button key={s} type="button" onClick={() => setStatus(s)}
+                <button key={s} type="button" onClick={() => handleStatusChange(s)}
                   className={"rounded-2xl border py-3 text-xs font-black uppercase tracking-[0.08em] transition " + (status === s ? "border-purple-400/40 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}>
                   {s}
                 </button>
               ))}
             </div>
+
+            {status === "sold" && (
+              <div className="mt-4 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
+                <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-green-400">What did it sell for?</label>
+                <input ref={actualSellRef} type="number" value={actualSell} onChange={(e) => setActualSell(e.target.value)} min="0" step="0.01" placeholder="0.00"
+                  className="w-full rounded-2xl border border-green-500/40 bg-black/40 px-4 py-3 text-xl font-black text-white outline-none placeholder:text-white/20 focus:border-green-400/60" />
+                {actualSell && buyPrice && (
+                  <p className="mt-2 text-xs text-green-400/70">
+                    Profit after eBay fees: <span className="font-black text-green-300">
+                      ${(Number(actualSell) - Number(actualSell) * 0.134 - Number(buyPrice)).toFixed(2)}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
+
             {existingImageUrl && (
               <div className="mt-5">
                 <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-white/40">Current Photo</p>

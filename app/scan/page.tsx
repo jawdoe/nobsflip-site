@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type EbayResult = {
@@ -39,16 +40,31 @@ const verdictConfig = {
 
 type ScanStep = "idle" | "price" | "camera" | "manual" | "loading";
 type PostageMode = "buyer" | "free";
+type FlipSaveState = null | "saving" | "saved" | "failed";
 
 export default function ScanPage() {
   const [step, setStep] = useState<ScanStep>("idle");
   const [buyPrice, setBuyPrice] = useState("");
   const [postageMode, setPostageMode] = useState<PostageMode>("buyer");
   const [postageAmount, setPostageAmount] = useState("");
+
+  // Persist postage settings across sessions
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("nbf_postage");
+      if (saved) { const p = JSON.parse(saved); setPostageMode(p.mode ?? "buyer"); setPostageAmount(p.amount ?? ""); }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem("nbf_postage", JSON.stringify({ mode: postageMode, amount: postageAmount })); } catch {}
+  }, [postageMode, postageAmount]);
   const [barcode, setBarcode] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState<"saved" | "failed" | null>(null);
+  const [flipSave, setFlipSave] = useState<FlipSaveState>(null);
+  const [flipId, setFlipId] = useState<string | null>(null);
   const [country, setCountry] = useState("AU");
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
@@ -59,7 +75,7 @@ export default function ScanPage() {
   const effectivePostage = postageMode === "buyer" ? "0" : (postageAmount || "0");
 
   async function runCheck(scannedBarcode: string, price: string, post: string) {
-    setStep("loading"); setError(""); setResult(null); setSaveStatus(null);
+    setStep("loading"); setError(""); setResult(null); setSaveStatus(null); setFlipSave(null); setFlipId(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
       const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: post, locale });
@@ -79,6 +95,23 @@ export default function ScanPage() {
       } catch { setSaveStatus("failed"); }
     } catch (err) { setError(err instanceof Error ? err.message : "Unknown error"); }
     finally { setStep("idle"); }
+  }
+
+  async function handleBoughtThis() {
+    if (!result) return;
+    setFlipSave("saving");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setFlipSave("failed"); return; }
+      const { data: inserted, error: insertError } = await supabase
+        .from("flip_posts")
+        .insert({ user_id: user.id, title: result.search, buy_price: result.buyPrice, status: "bought" })
+        .select("id")
+        .single();
+      if (insertError) { console.error("Flip insert error:", insertError); setFlipSave("failed"); return; }
+      setFlipId(inserted.id);
+      setFlipSave("saved");
+    } catch { setFlipSave("failed"); }
   }
 
   async function startCamera() {
@@ -245,8 +278,6 @@ export default function ScanPage() {
 
         {result && vc && (
           <div className="mt-4 space-y-3">
-            {saveStatus === "saved" && <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">Saved to history</div>}
-            {saveStatus === "failed" && <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">Could not save to history — make sure you are signed in</div>}
             {result.resolvedFrom && (
               <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
                 Barcode <span className="font-black">{result.resolvedFrom}</span> → <span className="font-black">{result.search}</span>
@@ -261,11 +292,47 @@ export default function ScanPage() {
                 <span className="font-black">Real sold data</span> — prices items actually sold for on eBay.
               </div>
             )}
+
             <div className={"w-full rounded-[2rem] border p-6 text-center " + vc.border + " " + vc.bg}>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Verdict</p>
               <h2 className={"mt-2 text-4xl font-black sm:text-5xl " + vc.text}>{vc.label}</h2>
               <p className="mt-2 text-xs text-white/50">{result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Current listings" : "Sold listings"} — {result.resultCount} results</p>
+
+              {(result.verdict === "BUY" || result.verdict === "MAYBE") && (
+                <div className="mt-4">
+                  {flipSave === null && (
+                    <button onClick={handleBoughtThis}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-lg transition hover:bg-white/90 active:scale-[0.97]">
+                      I bought this!
+                    </button>
+                  )}
+                  {flipSave === "saving" && (
+                    <div className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-6 py-3 text-sm font-black text-white/50">
+                      Saving...
+                    </div>
+                  )}
+                  {flipSave === "saved" && (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="inline-flex items-center gap-2 rounded-2xl bg-green-500/20 px-4 py-2 text-sm font-black text-green-300">
+                        ✓ Logged as a flip!
+                      </div>
+                      {flipId && (
+                        <Link href={"/admin/edit/" + flipId} className="text-xs text-white/40 underline hover:text-white/60">
+                          Edit flip details →
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                  {flipSave === "failed" && (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="text-xs text-red-400">Could not save — are you signed in?</div>
+                      <button onClick={handleBoughtThis} className="text-xs text-white/40 underline">Try again</button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <StatCard label="Median sale" value={formatMoney(result.medianPrice)} />
               <StatCard label={`eBay fees (${((result.feeRate ?? 0.135) * 100).toFixed(1)}%)`} value={formatMoney(result.ebayFeeEstimate)} />
@@ -282,6 +349,7 @@ export default function ScanPage() {
                 debug: finding={result._debug.findingApiStatus} · country={result._debug.country} · market={result._debug.marketplace}
               </div>
             )}
+
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
               <h3 className="mb-3 text-sm font-black uppercase tracking-tight">{result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Active Listings" : "Sold Listings"}</h3>
               <div className="space-y-2 lg:max-h-[400px] lg:overflow-y-auto">
@@ -297,6 +365,11 @@ export default function ScanPage() {
                 ))}
               </div>
             </div>
+
+            <button onClick={() => setStep("price")}
+              className="w-full rounded-2xl border border-white/10 py-4 text-sm font-black uppercase tracking-[0.08em] text-white/50 transition hover:border-purple-400/30 hover:text-white">
+              Scan Another
+            </button>
           </div>
         )}
       </div>

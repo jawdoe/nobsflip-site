@@ -267,10 +267,17 @@ export default function ScanPage() {
 
         {result && vc && (
           <div className="mt-4 space-y-3">
+            {result.warning && (
+              <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs leading-5 text-yellow-300">
+                <span className="font-black">Note:</span> Showing current asking prices, not sold prices. Use as a guide only — actual sell price may differ.
+              </div>
+            )}
             <div className={"w-full rounded-[2rem] border p-6 text-center " + vc.border + " " + vc.bg}>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Verdict</p>
               <h2 className={"mt-2 text-4xl font-black sm:text-5xl " + vc.text}>{vc.label}</h2>
-              <p className="mt-2 text-xs text-white/50">Based on {result.resultCount} listings</p>
+              <p className="mt-2 text-xs text-white/50">
+                {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Current listings" : "Sold listings"} · {result.resultCount} results
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <StatCard label="Median" value={formatMoney(result.medianPrice)} />
@@ -278,11 +285,15 @@ export default function ScanPage() {
               <StatCard label="Est. profit" value={formatMoney(result.estimatedProfit)} highlight={result.estimatedProfit > 0} />
               <StatCard label="ROI" value={result.roi.toFixed(0) + "%"} highlight={result.roi > 0} />
             </div>
-            {result.warning && (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs leading-5 text-white/40">{result.warning}</div>
-            )}
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
-              <h3 className="mb-3 text-sm font-black uppercase tracking-tight">Listings</h3>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-black uppercase tracking-tight">
+                  {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Active Listings (low → high)" : "Sold Listings"}
+                </h3>
+                <span className="text-[10px] font-black uppercase tracking-wide text-white/30">
+                  {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Asking price" : "Sold price"}
+                </span>
+              </div>
               <div className="space-y-2 lg:max-h-[400px] lg:overflow-y-auto">
                 {result.items.map((item, index) => (
                   <a
@@ -294,7 +305,9 @@ export default function ScanPage() {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-white">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-white/40">{item.condition} · {item.soldDate || "Date unknown"}</p>
+                      <p className="mt-0.5 text-xs text-white/40">
+                        {item.condition}{item.soldDate ? " · " + item.soldDate : ""}
+                      </p>
                     </div>
                     <p className="shrink-0 text-sm font-black text-purple-300">{formatMoney(Number(item.price))}</p>
                   </a>

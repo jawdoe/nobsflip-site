@@ -134,7 +134,8 @@ async function fetchBrowseApi(token: string, searchTerm: string, marketplace: ty
       condition: item.condition ?? null,
       soldDate: null,
     }))
-    .filter((item: SoldItem) => item.price > 0);
+    .filter((item: SoldItem) => item.price > 0)
+    .sort((a: SoldItem, b: SoldItem) => a.price - b.price);
 }
 
 export async function GET(req: NextRequest) {

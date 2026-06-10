@@ -30,53 +30,46 @@ type EbayResult = {
   }[];
 };
 
-// Country-specific postage presets
-const postagePresets: Record<string, { label: string; value: string }[]> = {
+// Satchel sizes the seller would absorb if offering free postage
+const freePostageOptions: Record<string, { label: string; value: string; hint: string }[]> = {
   AU: [
-    { label: "Free", value: "0" },
-    { label: "XS $10", value: "10.05" },
-    { label: "S $11.50", value: "11.50" },
-    { label: "M $15.65", value: "15.65" },
-    { label: "L $19.75", value: "19.75" },
+    { label: "XS", value: "10.05", hint: "up to 250g · $10.05" },
+    { label: "Small", value: "11.50", hint: "up to 500g · $11.50" },
+    { label: "Medium", value: "15.65", hint: "up to 1kg · $15.65" },
+    { label: "Large", value: "19.75", hint: "up to 3kg · $19.75" },
+    { label: "XL", value: "23.80", hint: "up to 5kg · $23.80" },
   ],
   US: [
-    { label: "Free", value: "0" },
-    { label: "$4", value: "4" },
-    { label: "$6", value: "6" },
-    { label: "$10", value: "10" },
-    { label: "$15", value: "15" },
+    { label: "Letter", value: "4", hint: "USPS First Class · ~$4" },
+    { label: "Small", value: "6", hint: "USPS First Class parcel · ~$6" },
+    { label: "Medium", value: "10", hint: "USPS Priority · ~$10" },
+    { label: "Large", value: "15", hint: "USPS Priority · ~$15" },
   ],
   GB: [
-    { label: "Free", value: "0" },
-    { label: "£3", value: "3" },
-    { label: "£5", value: "5" },
-    { label: "£8", value: "8" },
-    { label: "£12", value: "12" },
+    { label: "Small", value: "3", hint: "Royal Mail large letter · ~£3" },
+    { label: "Medium", value: "5", hint: "Royal Mail small parcel · ~£5" },
+    { label: "Large", value: "8", hint: "Royal Mail medium parcel · ~£8" },
   ],
   CA: [
-    { label: "Free", value: "0" },
-    { label: "$8", value: "8" },
-    { label: "$12", value: "12" },
-    { label: "$18", value: "18" },
+    { label: "Small", value: "10", hint: "Canada Post · ~$10" },
+    { label: "Medium", value: "15", hint: "Canada Post · ~$15" },
+    { label: "Large", value: "20", hint: "Canada Post · ~$20" },
   ],
   NZ: [
-    { label: "Free", value: "0" },
-    { label: "$6", value: "6" },
-    { label: "$9", value: "9" },
-    { label: "$14", value: "14" },
+    { label: "Small", value: "6", hint: "NZ Post · ~$6" },
+    { label: "Medium", value: "9", hint: "NZ Post · ~$9" },
+    { label: "Large", value: "14", hint: "NZ Post · ~$14" },
   ],
 };
-const defaultPresets = [
-  { label: "Free", value: "0" },
-  { label: "$5", value: "5" },
-  { label: "$10", value: "10" },
-  { label: "$15", value: "15" },
+const defaultFreePostageOptions = [
+  { label: "Small", value: "5", hint: "~$5" },
+  { label: "Medium", value: "10", hint: "~$10" },
+  { label: "Large", value: "15", hint: "~$15" },
 ];
 
 function getCountry() {
   if (typeof navigator === "undefined") return "AU";
-  const locale = navigator.language ?? "en-AU";
-  return locale.split("-")[1]?.toUpperCase() ?? "AU";
+  return (navigator.language ?? "en-AU").split("-")[1]?.toUpperCase() ?? "AU";
 }
 
 function formatMoney(value: number) {
@@ -85,10 +78,8 @@ function formatMoney(value: number) {
   const map: Record<string, string> = {
     AU: "AUD", US: "USD", GB: "GBP", CA: "CAD", NZ: "NZD",
     DE: "EUR", FR: "EUR", IT: "EUR", ES: "EUR", NL: "EUR",
-    JP: "JPY", IN: "INR", SG: "SGD", HK: "HKD",
   };
-  const currency = map[country] ?? "USD";
-  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
+  return new Intl.NumberFormat(locale, { style: "currency", currency: map[country] ?? "USD" }).format(value);
 }
 
 const verdictConfig = {
@@ -98,11 +89,13 @@ const verdictConfig = {
 };
 
 type ScanStep = "idle" | "price" | "camera" | "manual" | "loading";
+type PostageMode = "buyer" | "free";
 
 export default function ScanPage() {
   const [step, setStep] = useState<ScanStep>("idle");
   const [buyPrice, setBuyPrice] = useState("");
-  const [postage, setPostage] = useState("");
+  const [postageMode, setPostageMode] = useState<PostageMode>("buyer");
+  const [postageAmount, setPostageAmount] = useState("");
   const [barcode, setBarcode] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
@@ -111,11 +104,10 @@ export default function ScanPage() {
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
 
-  useEffect(() => {
-    setCountry(getCountry());
-  }, []);
+  useEffect(() => { setCountry(getCountry()); }, []);
 
-  const presets = postagePresets[country] ?? defaultPresets;
+  const satchelOptions = freePostageOptions[country] ?? defaultFreePostageOptions;
+  const effectivePostage = postageMode === "buyer" ? "0" : (postageAmount || "0");
 
   async function runCheck(scannedBarcode: string, price: string, post: string) {
     setStep("loading");
@@ -124,7 +116,7 @@ export default function ScanPage() {
     setSaveStatus(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
-      const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: post || "0", locale });
+      const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: post, locale });
       const response = await fetch("/api/sold-comps?" + params.toString());
       const text = await response.text();
       let data: any;
@@ -148,13 +140,8 @@ export default function ScanPage() {
           });
           if (insertError) { console.error("Scan save error:", insertError); setSaveStatus("failed"); }
           else { setSaveStatus("saved"); }
-        } else {
-          setSaveStatus("failed");
-        }
-      } catch (saveErr) {
-        console.error("Scan save failed:", saveErr);
-        setSaveStatus("failed");
-      }
+        } else { setSaveStatus("failed"); }
+      } catch { setSaveStatus("failed"); }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -176,7 +163,7 @@ export default function ScanPage() {
           const scanned = decodedText.trim();
           setBarcode(scanned);
           await stopCamera();
-          await runCheck(scanned, buyPrice, postage);
+          await runCheck(scanned, buyPrice, effectivePostage);
         },
         () => {}
       );
@@ -193,9 +180,7 @@ export default function ScanPage() {
         await scannerRef.current.clear();
         scannerRef.current = null;
       }
-    } catch {
-      scannerRef.current = null;
-    }
+    } catch { scannerRef.current = null; }
     setStep("idle");
   }
 
@@ -216,19 +201,18 @@ export default function ScanPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.12),transparent_40%)]" />
       </div>
 
+      {/* Camera overlay */}
       {step === "camera" && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">Scan Barcode</p>
               <p className="text-xs text-white/40">
-                {buyPrice ? `Buy: ${formatMoney(Number(buyPrice))}` : "No buy price"}
-                {postage && postage !== "0" ? ` · Post: ${formatMoney(Number(postage))}` : " · Free post"}
+                Buy: {buyPrice ? formatMoney(Number(buyPrice)) : "—"}
+                {postageMode === "buyer" ? " · Buyer pays post" : ` · Free post (you pay ${formatMoney(Number(postageAmount || 0))})`}
               </p>
             </div>
-            <button onClick={stopCamera} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">
-              Cancel
-            </button>
+            <button onClick={stopCamera} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">Cancel</button>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
             <div id="barcode-reader" className="w-full max-w-xs overflow-hidden rounded-2xl" />
@@ -237,13 +221,15 @@ export default function ScanPage() {
         </div>
       )}
 
+      {/* Price modal */}
       {step === "price" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-white">Set prices before scanning</h2>
-            <p className="mt-1 text-sm text-white/50">What is the price tag? Who pays postage?</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">Set prices</h2>
+            <p className="mt-1 text-sm text-white/50">What's on the price tag? Who covers postage?</p>
 
-            <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Buy price</label>
+            {/* Buy price */}
+            <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Store price</label>
             <input
               autoFocus
               type="number"
@@ -255,35 +241,62 @@ export default function ScanPage() {
               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30"
             />
 
-            <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Postage cost (you pay)</label>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {presets.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => setPostage(p.value)}
-                  className={"rounded-xl border px-3 py-1.5 text-xs font-black transition " + (postage === p.value ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/50 hover:text-white")}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            <input
-              type="number"
-              min="0"
-              value={postage}
-              onChange={(e) => setPostage(e.target.value)}
-              placeholder="or type custom amount"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/20 focus:border-purple-400/60"
-            />
-            <p className="mt-1 text-xs text-white/25">
-              {country === "AU" ? "AU Post: XS $10.05 · S $11.50 · M $15.65 · L $19.75" : "Set 0 if buyer pays or you drop off."}
-            </p>
-
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button onClick={() => setStep("idle")} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">
-                Cancel
+            {/* Postage mode toggle */}
+            <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Postage</label>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPostageMode("buyer")}
+                className={"rounded-2xl border py-3 text-sm font-black transition " + (postageMode === "buyer" ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}
+              >
+                Buyer pays
               </button>
+              <button
+                type="button"
+                onClick={() => setPostageMode("free")}
+                className={"rounded-2xl border py-3 text-sm font-black transition " + (postageMode === "free" ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}
+              >
+                I offer free post
+              </button>
+            </div>
+
+            {postageMode === "buyer" && (
+              <p className="mt-2 text-xs text-white/30">Buyer covers shipping — no postage cost to you.</p>
+            )}
+
+            {postageMode === "free" && (
+              <div className="mt-3">
+                <p className="mb-2 text-xs text-white/30">Pick your satchel size — this is what you pay and it comes off your profit:</p>
+                <div className="flex flex-wrap gap-2">
+                  {satchelOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPostageAmount(opt.value)}
+                      className={"rounded-xl border px-3 py-1.5 text-xs font-black transition " + (postageAmount === opt.value ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/50 hover:text-white")}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {postageAmount && (
+                  <p className="mt-1.5 text-xs text-white/30">
+                    {satchelOptions.find((o) => o.value === postageAmount)?.hint ?? `${formatMoney(Number(postageAmount))} postage`}
+                  </p>
+                )}
+                <input
+                  type="number"
+                  min="0"
+                  value={postageAmount}
+                  onChange={(e) => setPostageAmount(e.target.value)}
+                  placeholder="or enter custom amount"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/20 focus:border-purple-400/60"
+                />
+              </div>
+            )}
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button onClick={() => setStep("idle")} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">Cancel</button>
               <button onClick={startCamera} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">
                 Scan Barcode
               </button>
@@ -304,6 +317,7 @@ export default function ScanPage() {
           <p className="mt-1 text-sm text-white/50">Scan a barcode at the op shop and get an instant verdict.</p>
         </div>
 
+        {/* Mobile scan button */}
         <div className="md:hidden">
           <div className="flex min-h-[40vh] items-center justify-center py-8">
             <button
@@ -320,25 +334,24 @@ export default function ScanPage() {
                 autoFocus
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice, postage)}
+                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice, effectivePostage)}
                 placeholder="Enter barcode manually"
                 inputMode="numeric"
                 className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60"
               />
-              <button onClick={() => runCheck(barcode, buyPrice, postage)} disabled={!barcode.trim()} className="w-full rounded-2xl bg-purple-600 px-5 py-3 font-black text-white disabled:opacity-50">
-                Go
-              </button>
+              <button onClick={() => runCheck(barcode, buyPrice, effectivePostage)} disabled={!barcode.trim()} className="w-full rounded-2xl bg-purple-600 px-5 py-3 font-black text-white disabled:opacity-50">Go</button>
             </div>
           )}
         </div>
 
+        {/* Desktop inputs */}
         <div className="hidden md:block">
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl">
             <div className="flex items-center gap-3">
               <input
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice, postage)}
+                onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice, effectivePostage)}
                 placeholder="Barcode / GTIN"
                 inputMode="numeric"
                 className="flex-[2] rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60 transition"
@@ -351,53 +364,71 @@ export default function ScanPage() {
                 min="0"
                 className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60 transition"
               />
-              <input
-                value={postage}
-                onChange={(e) => setPostage(e.target.value)}
-                placeholder="Postage"
-                type="number"
-                min="0"
-                className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60 transition"
-              />
               <button
-                onClick={() => runCheck(barcode, buyPrice, postage)}
+                onClick={() => runCheck(barcode, buyPrice, effectivePostage)}
                 disabled={step === "loading" || !barcode.trim()}
                 className="rounded-2xl bg-purple-600 px-8 py-3 font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:opacity-50"
               >
                 {step === "loading" ? "Checking..." : "Check"}
               </button>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2 border-t border-white/5 pt-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/25 self-center">Postage:</span>
-              {presets.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => setPostage(p.value)}
-                  className={"rounded-xl border px-3 py-1 text-xs font-black transition " + (postage === p.value ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}
-                >
-                  {p.label}
-                </button>
-              ))}
+            {/* Desktop postage row */}
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/25">Postage:</span>
+              <button
+                type="button"
+                onClick={() => setPostageMode("buyer")}
+                className={"rounded-xl border px-3 py-1.5 text-xs font-black transition " + (postageMode === "buyer" ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}
+              >
+                Buyer pays
+              </button>
+              <button
+                type="button"
+                onClick={() => setPostageMode("free")}
+                className={"rounded-xl border px-3 py-1.5 text-xs font-black transition " + (postageMode === "free" ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}
+              >
+                I offer free post
+              </button>
+              {postageMode === "free" && (
+                <>
+                  <span className="text-white/20">→</span>
+                  {satchelOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPostageAmount(opt.value)}
+                      title={opt.hint}
+                      className={"rounded-xl border px-3 py-1.5 text-xs font-black transition " + (postageAmount === opt.value ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  <input
+                    type="number"
+                    min="0"
+                    value={postageAmount}
+                    onChange={(e) => setPostageAmount(e.target.value)}
+                    placeholder="custom"
+                    className="w-20 rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white outline-none placeholder:text-white/20 focus:border-purple-400/60"
+                  />
+                </>
+              )}
+              {postageMode === "free" && postageAmount && (
+                <span className="text-xs text-white/30">{satchelOptions.find((o) => o.value === postageAmount)?.hint ?? formatMoney(Number(postageAmount)) + " off profit"}</span>
+              )}
             </div>
           </section>
         </div>
 
-        {error && (
-          <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>
-        )}
+        {error && <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>}
 
         {result && vc && (
           <div className="mt-4 space-y-3">
             {saveStatus === "saved" && (
-              <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
-                Saved to history
-              </div>
+              <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">Saved to history</div>
             )}
             {saveStatus === "failed" && (
-              <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">
-                Could not save to history - make sure you are signed in
-              </div>
+              <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">Could not save to history — make sure you are signed in</div>
             )}
             {result.resolvedFrom && (
               <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
@@ -428,7 +459,7 @@ export default function ScanPage() {
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/40">
               Costs: buy {formatMoney(result.buyPrice)}
-              {result.postage > 0 ? ` + postage ${formatMoney(result.postage)}` : " + free post"}
+              {result.postage > 0 ? ` + postage ${formatMoney(result.postage)} (you cover)` : " + buyer pays post"}
               {` + eBay ${formatMoney(result.ebayFeeEstimate)}`}
             </div>
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
@@ -437,18 +468,12 @@ export default function ScanPage() {
               </h3>
               <div className="space-y-2 lg:max-h-[400px] lg:overflow-y-auto">
                 {result.items.map((item, index) => (
-                  <a
-                    key={String(index)}
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
+                  <a key={String(index)} href={item.url} target="_blank" rel="noreferrer"
                     className="flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 transition hover:border-purple-400/40"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-white">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-white/40">
-                        {item.condition}{item.soldDate ? " — " + item.soldDate : ""}
-                      </p>
+                      <p className="mt-0.5 text-xs text-white/40">{item.condition}{item.soldDate ? " — " + item.soldDate : ""}</p>
                     </div>
                     <p className="shrink-0 text-sm font-black text-purple-300">{formatMoney(Number(item.price))}</p>
                   </a>

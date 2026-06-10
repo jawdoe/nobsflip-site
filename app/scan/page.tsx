@@ -41,7 +41,7 @@ function formatMoney(value: number) {
 }
 
 const verdictConfig = {
-  BUY:   { border: "border-green-500/40",  bg: "bg-green-500/10",  text: "text-green-400",  label: "YES — BUY IT" },
+  BUY:   { border: "border-green-500/40",  bg: "bg-green-500/10",  text: "text-green-400",  label: "YES - BUY IT" },
   MAYBE: { border: "border-yellow-500/40", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "MAYBE" },
   SKIP:  { border: "border-red-500/40",    bg: "bg-red-500/10",    text: "text-red-400",    label: "HELL NO" },
 };
@@ -72,7 +72,6 @@ export default function ScanPage() {
       try { data = JSON.parse(text); } catch { throw new Error("Server error: " + text.slice(0, 150)); }
       if (!response.ok) throw new Error(data.error ?? "Something went wrong");
       setResult(data);
-      // Save to history
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -88,12 +87,8 @@ export default function ScanPage() {
             result_count: data.resultCount ?? 0,
             data_source: data.dataSource,
           });
-          if (insertError) {
-            console.error("Scan save error:", insertError);
-            setSaveStatus("failed");
-          } else {
-            setSaveStatus("saved");
-          }
+          if (insertError) { console.error("Scan save error:", insertError); setSaveStatus("failed"); }
+          else { setSaveStatus("saved"); }
         } else {
           setSaveStatus("failed");
         }
@@ -162,7 +157,6 @@ export default function ScanPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.12),transparent_40%)]" />
       </div>
 
-      {/* Camera overlay */}
       {step === "camera" && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
@@ -181,11 +175,10 @@ export default function ScanPage() {
         </div>
       )}
 
-      {/* Buy price modal */}
       {step === "price" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-white">What's the price in store?</h2>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">What is the price in store?</h2>
             <p className="mt-1 text-sm text-white/50">Enter the price tag, then scan the barcode.</p>
             <input
               autoFocus
@@ -198,23 +191,14 @@ export default function ScanPage() {
               className="mt-4 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30"
             />
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setStep("idle")}
-                className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50"
-              >
+              <button onClick={() => setStep("idle")} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">
                 Cancel
               </button>
-              <button
-                onClick={startCamera}
-                className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]"
-              >
+              <button onClick={startCamera} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">
                 Scan Barcode
               </button>
             </div>
-            <button
-              onClick={() => setStep("manual")}
-              className="mt-2 w-full py-2 text-xs text-white/30 underline"
-            >
+            <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">
               Type barcode manually instead
             </button>
           </div>
@@ -230,7 +214,6 @@ export default function ScanPage() {
           <p className="mt-1 text-sm text-white/50">Scan a barcode at the op shop and get an instant verdict.</p>
         </div>
 
-        {/* Mobile: big scan button */}
         <div className="md:hidden">
           <div className="flex min-h-[40vh] items-center justify-center py-8">
             <button
@@ -238,7 +221,7 @@ export default function ScanPage() {
               disabled={step === "loading"}
               className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50"
             >
-              {step === "loading" ? "Checking..." : "📷  Tap to Scan"}
+              {step === "loading" ? "Checking..." : "Tap to Scan"}
             </button>
           </div>
           {step === "manual" && (
@@ -252,18 +235,13 @@ export default function ScanPage() {
                 inputMode="numeric"
                 className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60"
               />
-              <button
-                onClick={() => runCheck(barcode, buyPrice)}
-                disabled={!barcode.trim()}
-                className="rounded-2xl bg-purple-600 px-5 py-3 font-black text-white disabled:opacity-50"
-              >
+              <button onClick={() => runCheck(barcode, buyPrice)} disabled={!barcode.trim()} className="rounded-2xl bg-purple-600 px-5 py-3 font-black text-white disabled:opacity-50">
                 Go
               </button>
             </div>
           )}
         </div>
 
-        {/* Desktop: horizontal input bar */}
         <div className="hidden md:block">
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl">
             <div className="flex items-center gap-3">
@@ -302,28 +280,28 @@ export default function ScanPage() {
           <div className="mt-4 space-y-3">
             {saveStatus === "saved" && (
               <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
-                ✓ Saved to history
+                Saved to history
               </div>
             )}
             {saveStatus === "failed" && (
               <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">
-                ⚠ Couldn't save to history — make sure you're signed in
+                Could not save to history - make sure you are signed in
               </div>
             )}
             {result.dataSource === "EBAY_BROWSE_ACTIVE" ? (
               <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs leading-5 text-yellow-300">
-                <span className="font-black">Heads up:</span> Showing current asking prices, not what items actually sold for. Use as a rough guide only.
+                <span className="font-black">Heads up:</span> Showing current asking prices, not what items actually sold for.
               </div>
             ) : (
               <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-xs text-green-300">
-                <span className="font-black">✓ Real sold data</span> — prices items actually sold for on eBay.
+                <span className="font-black">Real sold data</span> - prices items actually sold for on eBay.
               </div>
             )}
             <div className={"w-full rounded-[2rem] border p-6 text-center " + vc.border + " " + vc.bg}>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Verdict</p>
               <h2 className={"mt-2 text-4xl font-black sm:text-5xl " + vc.text}>{vc.label}</h2>
               <p className="mt-2 text-xs text-white/50">
-                {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Current listings" : "Sold listings"} · {result.resultCount} results
+                {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Current listings" : "Sold listings"} - {result.resultCount} results
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -335,11 +313,8 @@ export default function ScanPage() {
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-black uppercase tracking-tight">
-                  {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Active Listings (low → high)" : "Sold Listings"}
+                  {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Active Listings" : "Sold Listings"}
                 </h3>
-                <span className="text-[10px] font-black uppercase tracking-wide text-white/30">
-                  {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Asking price" : "Sold price"}
-                </span>
               </div>
               <div className="space-y-2 lg:max-h-[400px] lg:overflow-y-auto">
                 {result.items.map((item, index) => (
@@ -353,7 +328,7 @@ export default function ScanPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-white">{item.title}</p>
                       <p className="mt-0.5 text-xs text-white/40">
-                        {item.condition}{item.soldDate ? " · " + item.soldDate : ""}
+                        {item.condition}{item.soldDate ? " - " + item.soldDate : ""}
                       </p>
                     </div>
                     <p className="shrink-0 text-sm font-black text-purple-300">{formatMoney(Number(item.price))}</p>

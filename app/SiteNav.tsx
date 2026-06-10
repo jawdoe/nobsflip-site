@@ -20,11 +20,9 @@ export default function SiteNav() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
-
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -75,4 +73,8 @@ export default function SiteNav() {
           className="ml-2 rounded-xl border border-purple-400/40 bg-purple-500/15 px-4 py-2 text-sm font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25"
         >
           Sign In
-      
+        </Link>
+      )}
+    </nav>
+  );
+}

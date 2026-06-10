@@ -92,7 +92,7 @@ async function fetchFindingApi(appId: string, searchTerm: string, marketplace: t
   const res = await fetch(url, { cache: "no-store" });
 
   const contentType = res.headers.get("content-type") ?? "";
-  if (!contentType.includes("json")) return null; // eBay server error, try fallback
+  if (!contentType.includes("json")) return null;
 
   const data = await res.json();
   const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];
@@ -163,12 +163,10 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Try Finding API first — real sold/completed data
     let items = await fetchFindingApi(clientId, searchTerm, marketplace);
     let dataSource = "EBAY_FINDING_SOLD";
     let warning = "";
 
-    // Fall back to Browse API (active listings) if Finding API fails
     if (!items) {
       if (!clientSecret) {
         return NextResponse.json({ error: "eBay sold data unavailable and no client secret for fallback" }, { status: 502 });
@@ -176,7 +174,7 @@ export async function GET(req: NextRequest) {
       const token = await getEbayToken(clientId, clientSecret);
       items = await fetchBrowseApi(token, searchTerm, marketplace);
       dataSource = "EBAY_BROWSE_ACTIVE";
-      warning = "⚠ Showing active listing prices — sold data temporarily unavailable. These are asking prices, not what items actually sold for.";
+      warning = "Showing active listing prices, not what items actually sold for.";
     }
 
     const prices = items.map((i) => i.price);

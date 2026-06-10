@@ -17,10 +17,3 @@ export function getSupabaseAdmin(): SupabaseClient {
   }
   return _client;
 }
-
-// backwards-compat alias for existing imports
-export const supabaseAdmin = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return (getSupabaseAdmin() as any)[prop];
-  },
-});

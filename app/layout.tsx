@@ -40,7 +40,6 @@ export default function RootLayout({
                   {BRAND_TAGLINE}
                 </div>
               </Link>
-
               <SiteNav />
               <MobileMenu />
             </div>
@@ -51,9 +50,7 @@ export default function RootLayout({
           <footer className="border-t border-purple-500/15 bg-black/70">
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-zinc-400 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="font-black tracking-[0.28em] text-white">
-                  {BRAND_NAME}
-                </div>
+                <div className="font-black tracking-[0.28em] text-white">{BRAND_NAME}</div>
                 <div className="mt-1">{BRAND_TAGLINE}</div>
               </div>
             </div>

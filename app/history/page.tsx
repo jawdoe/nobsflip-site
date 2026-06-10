@@ -50,7 +50,8 @@ export default function HistoryPage() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error("History fetch error:", error);
         setScans((data as Scan[]) ?? []);
         setLoading(false);
       });

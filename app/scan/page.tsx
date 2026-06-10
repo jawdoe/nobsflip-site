@@ -54,6 +54,7 @@ export default function ScanPage() {
   const [barcode, setBarcode] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "failed" | null>(null);
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
 
@@ -61,6 +62,7 @@ export default function ScanPage() {
     setStep("loading");
     setError("");
     setResult(null);
+    setSaveStatus(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
       const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: "0", locale });
@@ -70,23 +72,35 @@ export default function ScanPage() {
       try { data = JSON.parse(text); } catch { throw new Error("Server error: " + text.slice(0, 150)); }
       if (!response.ok) throw new Error(data.error ?? "Something went wrong");
       setResult(data);
-      // Save to history (fire and forget — don't block UI)
-      supabase.auth.getUser().then(({ data: { user } }) => {
+      // Save to history
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          supabase.from("scans").insert({
+          const { error: insertError } = await supabase.from("scans").insert({
             user_id: user.id,
-            barcode: scannedBarcode,
+            barcode: scannedBarcode || null,
             search_term: data.search,
-            buy_price: data.buyPrice,
-            median_price: data.medianPrice,
-            estimated_profit: data.estimatedProfit,
-            roi: data.roi,
+            buy_price: data.buyPrice ?? 0,
+            median_price: data.medianPrice ?? 0,
+            estimated_profit: data.estimatedProfit ?? 0,
+            roi: data.roi ?? 0,
             verdict: data.verdict,
-            result_count: data.resultCount,
+            result_count: data.resultCount ?? 0,
             data_source: data.dataSource,
           });
+          if (insertError) {
+            console.error("Scan save error:", insertError);
+            setSaveStatus("failed");
+          } else {
+            setSaveStatus("saved");
+          }
+        } else {
+          setSaveStatus("failed");
         }
-      });
+      } catch (saveErr) {
+        console.error("Scan save failed:", saveErr);
+        setSaveStatus("failed");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -286,6 +300,16 @@ export default function ScanPage() {
 
         {result && vc && (
           <div className="mt-4 space-y-3">
+            {saveStatus === "saved" && (
+              <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
+                ✓ Saved to history
+              </div>
+            )}
+            {saveStatus === "failed" && (
+              <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">
+                ⚠ Couldn't save to history — make sure you're signed in
+              </div>
+            )}
             {result.dataSource === "EBAY_BROWSE_ACTIVE" ? (
               <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs leading-5 text-yellow-300">
                 <span className="font-black">Heads up:</span> Showing current asking prices, not what items actually sold for. Use as a rough guide only.

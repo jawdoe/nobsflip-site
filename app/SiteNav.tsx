@@ -8,9 +8,8 @@ import type { User } from "@supabase/supabase-js";
 
 const navItems = [
   { href: "/", label: "Home" },
-  { href: "/fliplog", label: "Flip Log" },
   { href: "/scan", label: "Scan" },
-  { href: "/media", label: "Videos" },
+  { href: "/history", label: "History" },
 ];
 
 export default function SiteNav() {

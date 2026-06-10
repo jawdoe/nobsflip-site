@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type EbayResult = {
   search: string;
@@ -54,6 +55,7 @@ export default function ScanPage() {
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
   const scannerRef = useRef<any>(null);
+  const supabase = createSupabaseBrowserClient();
 
   async function runCheck(scannedBarcode: string, price: string) {
     setStep("loading");
@@ -68,6 +70,23 @@ export default function ScanPage() {
       try { data = JSON.parse(text); } catch { throw new Error("Server error: " + text.slice(0, 150)); }
       if (!response.ok) throw new Error(data.error ?? "Something went wrong");
       setResult(data);
+      // Save to history (fire and forget — don't block UI)
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          supabase.from("scans").insert({
+            user_id: user.id,
+            barcode: scannedBarcode,
+            search_term: data.search,
+            buy_price: data.buyPrice,
+            median_price: data.medianPrice,
+            estimated_profit: data.estimatedProfit,
+            roi: data.roi,
+            verdict: data.verdict,
+            result_count: data.resultCount,
+            data_source: data.dataSource,
+          });
+        }
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {

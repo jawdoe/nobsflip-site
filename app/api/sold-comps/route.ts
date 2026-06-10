@@ -45,22 +45,9 @@ function getVerdict(profit: number, roi: number, soldCount: number): Verdict {
   return "SKIP";
 }
 
-// eBay final value fee rates by marketplace (2026)
-// AU: 13.4% (standard plan; free plan exists for <$25k/yr but we can't detect it)
-// US: 13.25% (most categories)
-// GB: 12.8% (business sellers; private sellers pay 0% but we assume business for safety)
-// CA: 13.25%
-// EU: 12.5% average
 const ebayFeeRate: Record<string, number> = {
-  AU: 0.134,
-  US: 0.1325,
-  GB: 0.128,
-  CA: 0.1325,
-  NZ: 0.134,
-  DE: 0.125,
-  FR: 0.125,
-  IT: 0.125,
-  ES: 0.125,
+  AU: 0.134, US: 0.1325, GB: 0.128, CA: 0.1325,
+  NZ: 0.134, DE: 0.125, FR: 0.125, IT: 0.125, ES: 0.125,
 };
 
 const marketplaceMap: Record<string, { globalId: string; locatedIn: string; currency: string; browseId: string }> = {
@@ -75,10 +62,7 @@ const marketplaceMap: Record<string, { globalId: string; locatedIn: string; curr
   ES: { globalId: "EBAY-ES", locatedIn: "ES", currency: "EUR", browseId: "EBAY_ES" },
 };
 
-// Resolve a barcode to a human-readable product name using free APIs.
-// Returns null if the barcode can't be resolved.
 async function resolveBarcode(barcode: string): Promise<string | null> {
-  // 1. Try UPC Item DB (works for most retail products)
   try {
     const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`, {
       headers: { "Accept": "application/json" },
@@ -87,13 +71,10 @@ async function resolveBarcode(barcode: string): Promise<string | null> {
     if (res.ok) {
       const data = await res.json();
       const title = data?.items?.[0]?.title;
-      if (title && typeof title === "string" && title.trim().length > 2) {
-        return title.trim();
-      }
+      if (title && typeof title === "string" && title.trim().length > 2) return title.trim();
     }
   } catch {}
 
-  // 2. Try Open Food Facts (food/grocery products)
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`, {
       cache: "no-store",
@@ -146,11 +127,18 @@ async function fetchFindingApi(appId: string, searchTerm: string, marketplace: t
   const res = await fetch(url, { cache: "no-store" });
 
   const contentType = res.headers.get("content-type") ?? "";
-  if (!contentType.includes("json")) return null;
+  if (!contentType.includes("json")) {
+    console.error("[FindingAPI] Non-JSON response, status:", res.status);
+    return null;
+  }
 
   const data = await res.json();
   const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];
-  if (ack === "Failure") return null;
+  if (ack === "Failure") {
+    const errMsg = data?.findCompletedItemsResponse?.[0]?.errorMessage?.[0]?.error?.[0]?.message?.[0];
+    console.error("[FindingAPI] Failure:", errMsg ?? JSON.stringify(data).slice(0, 300));
+    return null;
+  }
 
   const rawItems = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item ?? [];
 
@@ -192,7 +180,6 @@ async function fetchBrowseApi(token: string, searchTerm: string, marketplace: ty
     .sort((a: SoldItem, b: SoldItem) => a.price - b.price);
 }
 
-// Simple heuristic: if it looks like a barcode (all digits, 8-14 chars), treat as barcode
 function looksLikeBarcode(s: string) {
   return /^\d{8,14}$/.test(s.trim());
 }
@@ -221,7 +208,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing EBAY_CLIENT_ID" }, { status: 500 });
   }
 
-  // If it looks like a barcode, try to resolve it to a product name first
   let searchTerm = rawSearchTerm;
   let resolvedName: string | null = null;
   let barcodeResolved = false;
@@ -232,7 +218,6 @@ export async function GET(req: NextRequest) {
       searchTerm = resolvedName;
       barcodeResolved = true;
     }
-    // If resolution failed, searchTerm stays as the raw barcode (fallback)
   }
 
   try {
@@ -240,7 +225,6 @@ export async function GET(req: NextRequest) {
     let dataSource = "EBAY_FINDING_SOLD";
     let warning = "";
 
-    // If barcode resolved but got no results, try the raw barcode as fallback
     if (barcodeResolved && items !== null && items.length === 0) {
       const fallbackItems = await fetchFindingApi(clientId, rawBarcode!, marketplace);
       if (fallbackItems && fallbackItems.length > 0) {
@@ -278,11 +262,11 @@ export async function GET(req: NextRequest) {
       warning,
       buyPrice: cleanNumber(buyPrice),
       postage: cleanNumber(postage),
+      feeRate: cleanNumber(feeRate),
       resultCount: items.length,
       averagePrice: cleanNumber(averagePrice),
       medianPrice: cleanNumber(medianPrice),
       estimatedSalePrice: cleanNumber(estimatedSalePrice),
-      feeRate: cleanNumber(feeRate),
       ebayFeeEstimate: cleanNumber(ebayFeeEstimate),
       estimatedProfit: cleanNumber(estimatedProfit),
       roi: cleanNumber(roi),

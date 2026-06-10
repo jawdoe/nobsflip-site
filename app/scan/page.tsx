@@ -152,8 +152,8 @@ export default function ScanPage() {
       {step === "price" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-white">How much would you pay?</h2>
-            <p className="mt-1 text-sm text-white/50">Enter the price you'd buy it for, then scan the barcode.</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">What's the price in store?</h2>
+            <p className="mt-1 text-sm text-white/50">Enter the price tag, then scan the barcode.</p>
             <input
               autoFocus
               type="number"
@@ -199,13 +199,15 @@ export default function ScanPage() {
 
         {/* Mobile: big scan button */}
         <div className="md:hidden">
-          <button
-            onClick={() => setStep("price")}
-            disabled={step === "loading"}
-            className="w-full rounded-[2rem] bg-purple-600 py-6 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_30px_rgba(147,51,234,0.4)] transition hover:bg-purple-500 disabled:opacity-50"
-          >
-            {step === "loading" ? "Checking..." : "📷  Tap to Scan"}
-          </button>
+          <div className="flex min-h-[40vh] items-center justify-center py-8">
+            <button
+              onClick={() => setStep("price")}
+              disabled={step === "loading"}
+              className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50"
+            >
+              {step === "loading" ? "Checking..." : "📷  Tap to Scan"}
+            </button>
+          </div>
           {step === "manual" && (
             <div className="mt-3 flex gap-2">
               <input

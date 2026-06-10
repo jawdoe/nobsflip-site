@@ -48,12 +48,23 @@ async function getEbayToken(clientId: string, clientSecret: string): Promise<str
 
 async function fetchFindingApi(appId: string, searchTerm: string, marketplace: typeof marketplaceMap[string]): Promise<{ items: SoldItem[] | null; error: string | null }> {
   try {
-    const qs = ["OPERATION-NAME=findCompletedItems","SERVICE-VERSION=1.13.0",`SECURITY-APPNAME=${encodeURIComponent(appId)}`,"RESPONSE-DATA-FORMAT=JSON",`GLOBAL-ID=${marketplace.globalId}`,`keywords=${encodeURIComponent(searchTerm)}`,"paginationInput.entriesPerPage=20","itemFilter(0).name=SoldItemsOnly","itemFilter(0).value=true","itemFilter(1).name=LocatedIn",`itemFilter(1).value=${marketplace.locatedIn}`].join("&");
+    const params = [
+      "OPERATION-NAME=findCompletedItems",
+      "SERVICE-VERSION=1.13.0",
+      `SECURITY-APPNAME=${encodeURIComponent(appId)}`,
+      "RESPONSE-DATA-FORMAT=JSON",
+      `GLOBAL-ID=${marketplace.globalId}`,
+      `keywords=${encodeURIComponent(searchTerm)}`,
+      "paginationInput.entriesPerPage=20",
+      "itemFilter(0).name=SoldItemsOnly",
+      "itemFilter(0).value=true",
+    ];
+    const qs = params.join("&");
     const res = await fetch(`https://svcs.ebay.com/services/search/FindingService/v1?${qs}`, { cache: "no-store" });
     const contentType = res.headers.get("content-type") ?? "";
     if (!contentType.includes("json")) {
       const body = await res.text();
-      return { items: null, error: `HTTP ${res.status} - non-JSON response: ${body.slice(0, 200)}` };
+      return { items: null, error: `HTTP ${res.status}: ${body.slice(0, 200)}` };
     }
     const data = await res.json();
     const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];
@@ -62,7 +73,12 @@ async function fetchFindingApi(appId: string, searchTerm: string, marketplace: t
       return { items: null, error: `eBay error: ${errMsg}` };
     }
     const rawItems = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item ?? [];
-    const items = rawItems.map((item: any) => { const p = item.sellingStatus?.[0]?.currentPrice?.[0]; return { title: getText(item.title) ?? "Unknown", price: toNumber(p?.__value__), currency: p?.["@currencyId"] ?? marketplace.currency, url: getText(item.viewItemURL) ?? "#", image: getText(item.galleryURL), condition: getText(item.condition?.[0]?.conditionDisplayName), soldDate: getText(item.listingInfo?.[0]?.endTime) }; }).filter((i: SoldItem) => i.price > 0);
+    const items = rawItems
+      .map((item: any) => {
+        const p = item.sellingStatus?.[0]?.currentPrice?.[0];
+        return { title: getText(item.title) ?? "Unknown", price: toNumber(p?.__value__), currency: p?.["@currencyId"] ?? marketplace.currency, url: getText(item.viewItemURL) ?? "#", image: getText(item.galleryURL), condition: getText(item.condition?.[0]?.conditionDisplayName), soldDate: getText(item.listingInfo?.[0]?.endTime) };
+      })
+      .filter((i: SoldItem) => i.price > 0);
     return { items, error: null };
   } catch (e) {
     return { items: null, error: `Exception: ${e instanceof Error ? e.message : String(e)}` };
@@ -74,7 +90,10 @@ async function fetchBrowseApi(token: string, searchTerm: string, marketplace: ty
   const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` }, cache: "no-store" });
   if (!res.ok) return [];
   const data = await res.json();
-  return (data.itemSummaries ?? []).map((item: any) => ({ title: item.title ?? "Unknown", price: Number(item.price?.value ?? 0), currency: item.price?.currency ?? marketplace.currency, url: item.itemWebUrl ?? "#", image: item.image?.imageUrl ?? null, condition: item.condition ?? null, soldDate: null })).filter((i: SoldItem) => i.price > 0).sort((a: SoldItem, b: SoldItem) => a.price - b.price);
+  return (data.itemSummaries ?? [])
+    .map((item: any) => ({ title: item.title ?? "Unknown", price: Number(item.price?.value ?? 0), currency: item.price?.currency ?? marketplace.currency, url: item.itemWebUrl ?? "#", image: item.image?.imageUrl ?? null, condition: item.condition ?? null, soldDate: null }))
+    .filter((i: SoldItem) => i.price > 0)
+    .sort((a: SoldItem, b: SoldItem) => a.price - b.price);
 }
 
 export async function GET(req: NextRequest) {
@@ -110,7 +129,12 @@ export async function GET(req: NextRequest) {
 
     if (barcodeResolved && items !== null && items.length === 0) {
       const fallback = await fetchFindingApi(clientId, rawBarcode!, marketplace);
-      if (fallback.items && fallback.items.length > 0) { items = fallback.items; searchTerm = rawBarcode!; barcodeResolved = false; findingApiStatus = `OK via raw barcode - ${items.length} results`; }
+      if (fallback.items && fallback.items.length > 0) {
+        items = fallback.items;
+        searchTerm = rawBarcode!;
+        barcodeResolved = false;
+        findingApiStatus = `OK via raw barcode - ${items.length} results`;
+      }
     }
 
     if (!items) {
@@ -119,7 +143,7 @@ export async function GET(req: NextRequest) {
       items = await fetchBrowseApi(token, searchTerm, marketplace);
       dataSource = "EBAY_BROWSE_ACTIVE";
       warning = "Showing active listing prices, not what items actually sold for.";
-      findingApiStatus = `FAILED (using Browse fallback): ${findingResult.error}`;
+      findingApiStatus = `FAILED (Browse fallback): ${findingResult.error}`;
     }
 
     const prices = items.map((i) => i.price);

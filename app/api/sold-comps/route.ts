@@ -83,11 +83,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const appId = process.env.EBAY_APP_ID;
+  const appId = process.env.EBAY_CLIENT_ID;
 
   if (!appId) {
     return NextResponse.json(
-      { error: "Missing EBAY_APP_ID in .env.local" },
+      { error: "Missing EBAY_CLIENT_ID env var" },
       { status: 500 }
     );
   }

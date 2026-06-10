@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
@@ -77,18 +78,34 @@ export default function DashboardPage() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "bought" | "listed" | "sold">("all");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
   const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
 
   useEffect(() => {
     Promise.all([
       supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,actual_sell,image_url,created_at").order("created_at", { ascending: false }),
       supabase.from("scans").select("*").order("created_at", { ascending: false }).limit(50),
-    ]).then(([flipsRes, scansRes]) => {
+      supabase.auth.getUser(),
+    ]).then(async ([flipsRes, scansRes, userRes]) => {
       setFlips((flipsRes.data as FlipPost[]) ?? []);
       setScans((scansRes.data as Scan[]) ?? []);
+      const u = userRes.data.user;
+      if (u) {
+        setUserEmail(u.email ?? null);
+        const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", u.id).single();
+        setIsPremium(profile?.is_premium === true);
+      }
       setLoading(false);
     });
   }, []);
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   const EBAY_FEE = 0.134;
   const totalInvested = flips.reduce((s, f) => s + (f.buy_price ?? 0), 0);
@@ -214,6 +231,50 @@ export default function DashboardPage() {
               )}
             </section>
 
+
+            {/* Profile / Account */}
+            <section className="mt-10 border-t border-white/10 pt-8">
+              <h2 className="mb-4 text-sm font-black uppercase tracking-tight text-white/70">Account</h2>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 space-y-4">
+                {/* Email + plan badge */}
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.08em] text-white/40">Signed in as</p>
+                    <p className="mt-0.5 text-sm font-bold text-white truncate">{userEmail ?? "—"}</p>
+                  </div>
+                  {isPremium ? (
+                    <span className="shrink-0 rounded-full border border-purple-400/40 bg-purple-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-purple-300">
+                      Premium ✦
+                    </span>
+                  ) : (
+                    <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white/40">
+                      Free
+                    </span>
+                  )}
+                </div>
+
+                {/* Upgrade prompt for free users */}
+                {!isPremium && (
+                  <a href="/pricing" className="flex items-center justify-between rounded-xl border border-purple-400/30 bg-purple-500/10 px-4 py-3 transition hover:bg-purple-500/20">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-purple-300">Upgrade to Premium</p>
+                      <p className="text-[11px] text-white/40 mt-0.5">Real sold prices · price ranges · more</p>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.5} stroke="currentColor" className="h-4 w-4 text-purple-400 shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </a>
+                )}
+
+                {/* Sign out */}
+                <button
+                  onClick={handleSignOut}
+                  className="w-full rounded-xl border border-white/10 py-3 text-xs font-black uppercase tracking-[0.1em] text-white/40 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-300"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </section>
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-black uppercase tracking-tight text-white/70">Scan History</h2>

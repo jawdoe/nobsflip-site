@@ -116,6 +116,15 @@ export async function GET(req: NextRequest) {
       cache: "no-store",
     });
 
+    const contentType = ebayRes.headers.get("content-type") ?? "";
+    if (!contentType.includes("json")) {
+      const text = await ebayRes.text();
+      return NextResponse.json(
+        { error: "eBay returned non-JSON response", details: text.slice(0, 500) },
+        { status: 502 }
+      );
+    }
+
     const data = await ebayRes.json();
 
     const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];

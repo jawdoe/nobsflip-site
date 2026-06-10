@@ -65,8 +65,14 @@ export default function ScanPage() {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
       const params = new URLSearchParams({ barcode: finalBarcode, buy: buyPrice || "0", postage: "0", locale });
       const response = await fetch("/api/sold-comps?" + params.toString());
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Something went wrong");
+      let data: any;
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server error: " + text.slice(0, 200));
+      }
+      if (!response.ok) throw new Error(data.error + (data.details ? " — " + JSON.stringify(data.details).slice(0, 200) : ""));
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

@@ -19,27 +19,11 @@ function cleanNumber(value: number) {
   return Number(value.toFixed(2));
 }
 
-function getText(value: unknown): string | null {
-  if (!value) return null;
-  if (Array.isArray(value)) return value[0] ?? null;
-  return String(value);
-}
-
-function toNumber(value: unknown): number {
-  const raw = Array.isArray(value) ? value[0] : value;
-  const num = Number(raw);
-  return Number.isFinite(num) ? num : 0;
-}
-
 function median(values: number[]) {
   if (!values.length) return 0;
-
   const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-
-  return sorted.length % 2
-    ? sorted[middle]
-    : (sorted[middle - 1] + sorted[middle]) / 2;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 function getVerdict(profit: number, roi: number, soldCount: number): Verdict {
@@ -49,148 +33,137 @@ function getVerdict(profit: number, roi: number, soldCount: number): Verdict {
   return "SKIP";
 }
 
+async function getEbayToken(clientId: string, clientSecret: string): Promise<string> {
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  const res = await fetch("https://api.ebay.com/identity/v1/oauth2/token", {
+    method: "POST",
+    headers: {
+      "Authorization": `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials&scope=https%3A%2F%2Fapi.ebay.com%2Foauth%2Fapi_scope",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`OAuth failed: ${res.status} ${text.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  return data.access_token as string;
+}
+
+const marketplaceMap: Record<string, { id: string; currency: string }> = {
+  AU: { id: "EBAY_AU", currency: "AUD" },
+  US: { id: "EBAY_US", currency: "USD" },
+  GB: { id: "EBAY_GB", currency: "GBP" },
+  CA: { id: "EBAY_CA", currency: "CAD" },
+  NZ: { id: "EBAY_AU", currency: "AUD" },
+  DE: { id: "EBAY_DE", currency: "EUR" },
+  FR: { id: "EBAY_FR", currency: "EUR" },
+  IT: { id: "EBAY_IT", currency: "EUR" },
+  ES: { id: "EBAY_ES", currency: "EUR" },
+};
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
   const barcode = searchParams.get("barcode")?.trim();
   const query = searchParams.get("query")?.trim();
   const keyword = searchParams.get("keyword")?.trim();
-
   const buyPrice = Number(searchParams.get("buy") ?? 0);
   const postage = Number(searchParams.get("postage") ?? 0);
-
   const locale = searchParams.get("locale") ?? "en-AU";
   const country = locale.split("-")[1]?.toUpperCase() ?? "AU";
-  const marketplaceMap: Record<string, { globalId: string; locatedIn: string }> = {
-    AU: { globalId: "EBAY-AU", locatedIn: "AU" },
-    US: { globalId: "EBAY-US", locatedIn: "US" },
-    GB: { globalId: "EBAY-GB", locatedIn: "GB" },
-    CA: { globalId: "EBAY-ENCA", locatedIn: "CA" },
-    NZ: { globalId: "EBAY-AU", locatedIn: "AU" },
-    DE: { globalId: "EBAY-DE", locatedIn: "DE" },
-    FR: { globalId: "EBAY-FR", locatedIn: "FR" },
-    IT: { globalId: "EBAY-IT", locatedIn: "IT" },
-    ES: { globalId: "EBAY-ES", locatedIn: "ES" },
-  };
-  const marketplace = marketplaceMap[country] ?? { globalId: "EBAY-US", locatedIn: "US" };
+  const marketplace = marketplaceMap[country] ?? { id: "EBAY_US", currency: "USD" };
 
   const searchTerm = barcode || query || keyword;
-
   if (!searchTerm) {
-    return NextResponse.json(
-      { error: "Missing barcode, query, or keyword" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing barcode, query, or keyword" }, { status: 400 });
   }
 
-  const appId = process.env.EBAY_CLIENT_ID;
-  const ebayEnv = process.env.EBAY_ENV ?? "production";
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
 
-  if (!appId) {
-    return NextResponse.json(
-      { error: "Missing EBAY_CLIENT_ID env var" },
-      { status: 500 }
-    );
+  if (!clientId || !clientSecret) {
+    return NextResponse.json({ error: "Missing EBAY_CLIENT_ID or EBAY_CLIENT_SECRET" }, { status: 500 });
   }
-
-  const baseHost = ebayEnv === "sandbox"
-    ? "svcs.sandbox.ebay.com"
-    : "svcs.ebay.com";
-
-  const ebayUrl = new URL(`https://${baseHost}/services/search/FindingService/v1`);
-
-  ebayUrl.searchParams.set("OPERATION-NAME", "findCompletedItems");
-  ebayUrl.searchParams.set("SERVICE-VERSION", "1.13.0");
-  ebayUrl.searchParams.set("SECURITY-APPNAME", appId);
-  ebayUrl.searchParams.set("RESPONSE-DATA-FORMAT", "JSON");
-  ebayUrl.searchParams.set("REST-PAYLOAD", "");
-  ebayUrl.searchParams.set("GLOBAL-ID", marketplace.globalId);
-  ebayUrl.searchParams.set("keywords", searchTerm);
-  ebayUrl.searchParams.set("paginationInput.entriesPerPage", "20");
-
-  ebayUrl.searchParams.set("itemFilter(0).name", "SoldItemsOnly");
-  ebayUrl.searchParams.set("itemFilter(0).value", "true");
-
-  ebayUrl.searchParams.set("itemFilter(1).name", "LocatedIn");
-  ebayUrl.searchParams.set("itemFilter(1).value", marketplace.locatedIn);
 
   try {
-    const ebayRes = await fetch(ebayUrl.toString(), {
+    const token = await getEbayToken(clientId, clientSecret);
+
+    // Try Marketplace Insights API (sold items)
+    const insightsUrl = `https://api.ebay.com/buy/marketplace_insights/v1_beta/item_sales/search?q=${encodeURIComponent(searchTerm)}&marketplace_ids=${marketplace.id}&limit=20`;
+
+    const insightsRes = await fetch(insightsUrl, {
+      headers: { "Authorization": `Bearer ${token}` },
       cache: "no-store",
     });
 
-    const contentType = ebayRes.headers.get("content-type") ?? "";
-    if (!contentType.includes("json")) {
-      const text = await ebayRes.text();
-      return NextResponse.json(
-        {
-          error: "eBay returned non-JSON response",
-          details: text.slice(0, 300),
-          debug: { env: ebayEnv, host: baseHost, appIdPrefix: appId.slice(0, 8) },
-        },
-        { status: 502 }
-      );
+    let items: SoldItem[] = [];
+    let dataSource = "EBAY_MARKETPLACE_INSIGHTS";
+
+    if (insightsRes.ok) {
+      const insightsData = await insightsRes.json();
+      const rawItems = insightsData.itemSales ?? [];
+
+      items = rawItems
+        .map((item: any) => ({
+          title: item.title ?? "Unknown item",
+          price: Number(item.lastSoldPrice?.value ?? 0),
+          currency: item.lastSoldPrice?.currency ?? marketplace.currency,
+          url: item.itemWebUrl ?? "#",
+          image: item.image?.imageUrl ?? null,
+          condition: item.condition ?? null,
+          soldDate: item.lastSoldDate ?? null,
+        }))
+        .filter((item: SoldItem) => item.price > 0);
+    } else {
+      // Fallback: Browse API (active listings — note this in warning)
+      dataSource = "EBAY_BROWSE_ACTIVE";
+      const browseUrl = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(searchTerm)}&marketplace_ids=${marketplace.id}&filter=buyingOptions%3A%7BFIXED_PRICE%7D&limit=20`;
+
+      const browseRes = await fetch(browseUrl, {
+        headers: { "Authorization": `Bearer ${token}` },
+        cache: "no-store",
+      });
+
+      if (!browseRes.ok) {
+        const text = await browseRes.text();
+        return NextResponse.json({ error: `eBay API error: ${browseRes.status} ${text.slice(0, 200)}` }, { status: 502 });
+      }
+
+      const browseData = await browseRes.json();
+      const rawItems = browseData.itemSummaries ?? [];
+
+      items = rawItems
+        .map((item: any) => ({
+          title: item.title ?? "Unknown item",
+          price: Number(item.price?.value ?? 0),
+          currency: item.price?.currency ?? marketplace.currency,
+          url: item.itemWebUrl ?? "#",
+          image: item.image?.imageUrl ?? null,
+          condition: item.condition ?? null,
+          soldDate: null,
+        }))
+        .filter((item: SoldItem) => item.price > 0);
     }
 
-    const data = await ebayRes.json();
-
-    const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];
-
-    if (!ebayRes.ok || ack === "Failure") {
-      return NextResponse.json(
-        {
-          error: "eBay request failed",
-          details: data,
-        },
-        { status: ebayRes.status || 500 }
-      );
-    }
-
-    const response = data?.findCompletedItemsResponse?.[0];
-    const searchResult = response?.searchResult?.[0];
-    const rawItems = searchResult?.item ?? [];
-
-    const items: SoldItem[] = rawItems
-      .map((item: any) => {
-        const sellingStatus = item.sellingStatus?.[0];
-        const currentPrice = sellingStatus?.currentPrice?.[0];
-
-        return {
-          title: getText(item.title) ?? "Unknown item",
-          price: toNumber(currentPrice?.__value__),
-          currency: currentPrice?.["@currencyId"] ?? "AUD",
-          url: getText(item.viewItemURL) ?? "#",
-          image: getText(item.galleryURL),
-          condition: getText(item.condition?.[0]?.conditionDisplayName),
-          soldDate: getText(item.listingInfo?.[0]?.endTime),
-        };
-      })
-      .filter((item: SoldItem) => item.title && item.price > 0 && item.url);
-
-    const prices = items.map((item) => item.price);
-
-    const averagePrice =
-      prices.length > 0
-        ? prices.reduce((sum, price) => sum + price, 0) / prices.length
-        : 0;
-
+    const prices = items.map((i) => i.price);
+    const averagePrice = prices.length ? prices.reduce((s, p) => s + p, 0) / prices.length : 0;
     const medianPrice = median(prices);
     const estimatedSalePrice = medianPrice || averagePrice;
     const ebayFeeEstimate = estimatedSalePrice * 0.14;
-
-    const estimatedProfit =
-      estimatedSalePrice - buyPrice - postage - ebayFeeEstimate;
-
+    const estimatedProfit = estimatedSalePrice - buyPrice - postage - ebayFeeEstimate;
     const roi = buyPrice > 0 ? (estimatedProfit / buyPrice) * 100 : 0;
-
     const verdict = getVerdict(estimatedProfit, roi, items.length);
 
     return NextResponse.json({
       search: searchTerm,
       searchType: barcode ? "BARCODE" : "QUERY",
-      dataSource: "EBAY_FIND_COMPLETED_ITEMS",
-      warning:
-        "Free testing route using eBay Finding API. This may fail if your eBay key does not have completed-items access.",
+      dataSource,
+      warning: dataSource === "EBAY_BROWSE_ACTIVE"
+        ? "Showing active listing prices (not sold). Sold data unavailable via Marketplace Insights for this region."
+        : "",
       buyPrice: cleanNumber(buyPrice),
       postage: cleanNumber(postage),
       resultCount: items.length,
@@ -204,13 +177,8 @@ export async function GET(req: NextRequest) {
       items,
     });
   } catch (error) {
-    console.error("Sold comps API error:", error);
-
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to fetch sold comps",
-      },
+      { error: error instanceof Error ? error.message : "Failed to fetch" },
       { status: 500 }
     );
   }

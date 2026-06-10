@@ -132,7 +132,7 @@ export default async function FlipLogPage({
 
   if (error) {
     return (
-      <main className="relative min-h-screen overflow-hidden bg-[#07070a] px-4 py-10 text-white">
+      <main className="relative min-h-screen overflow-hidden bg-[#0d0b16] px-4 py-10 text-white">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.2),transparent_34%)]" />
           <div className="absolute inset-0 bg-black/84" />

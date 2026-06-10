@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import type { User } from "@supabase/supabase-js";
 
 const navItems = [
   {
@@ -9,7 +12,7 @@ const navItems = [
     label: "Dashboard",
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d={active ? "M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" : "M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"} />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" />
       </svg>
     ),
   },
@@ -26,25 +29,46 @@ const navItems = [
   {
     href: "/admin",
     label: "Add Flip",
-    icon: (active: boolean) => (
+    icon: (_active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
     ),
   },
-  {
-    href: "/pricing",
-    label: "Upgrade",
-    icon: (_active: boolean) => (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-      </svg>
-    ),
-  },
 ];
+
+function AccountIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+    </svg>
+  );
+}
+
+function LoginIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.5} stroke="currentColor" className="h-5 w-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+    </svg>
+  );
+}
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const accountHref = user ? "/pricing" : "/login";
+  const accountLabel = user ? "Account" : "Login";
+  const accountActive = pathname.startsWith("/pricing") || pathname.startsWith("/login");
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl md:hidden">
@@ -70,6 +94,17 @@ export default function MobileBottomNav() {
             </Link>
           );
         })}
+
+        {/* Auth-aware account/login item */}
+        <Link href={accountHref}
+          className="flex flex-1 flex-col items-center justify-center gap-1 py-3 transition">
+          <span className={accountActive ? "text-purple-300" : "text-white/40"}>
+            {user ? <AccountIcon /> : <LoginIcon />}
+          </span>
+          <span className={"text-[10px] font-black uppercase tracking-wide " + (accountActive ? "text-purple-300" : "text-white/30")}>
+            {accountLabel}
+          </span>
+        </Link>
       </div>
     </nav>
   );

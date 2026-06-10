@@ -181,7 +181,7 @@ export default function EditEbayDraftPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#07070a] px-6 py-16 text-white">
+      <main className="min-h-screen bg-[#0d0b16] px-6 py-16 text-white">
         <div className="mx-auto max-w-5xl rounded-[2rem] border border-white/10 bg-[#0f1016] p-8">
           <p className="text-sm text-white/60">Loading eBay draft...</p>
         </div>
@@ -190,7 +190,7 @@ export default function EditEbayDraftPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#07070a] text-white">
+    <main className="min-h-screen bg-[#0d0b16] text-white">
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-8">
         <div className="max-w-4xl">
           <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white/70">

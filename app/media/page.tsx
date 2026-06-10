@@ -304,13 +304,13 @@ export default async function MediaPage() {
     : videos;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#07070a] text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#0d0b16] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[url('/outback-pub-bg.png')] bg-cover bg-center bg-no-repeat opacity-35 md:opacity-45" />
         <div className="absolute inset-0 bg-black/78" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.2),transparent_34%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_32%)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/78 to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0b16] via-[#0d0b16]/78 to-black/50" />
       </div>
 
       <section className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-32 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-16">

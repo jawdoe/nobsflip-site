@@ -44,7 +44,7 @@ export default async function EbayDraftsPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#07070a] p-8 text-white">
+      <main className="min-h-screen bg-[#0d0b16] p-8 text-white">
         <h1 className="text-3xl font-black">eBay Drafts</h1>
         <p className="mt-4 text-red-300">Error loading drafts: {error.message}</p>
       </main>
@@ -52,7 +52,7 @@ export default async function EbayDraftsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#07070a] text-white">
+    <main className="min-h-screen bg-[#0d0b16] text-white">
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-8">
         <div className="max-w-4xl">
           <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white/70">

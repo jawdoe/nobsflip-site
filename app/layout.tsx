@@ -3,7 +3,6 @@ import Link from "next/link";
 import Script from "next/script";
 import "./globals.css";
 import SiteNav from "./SiteNav";
-import MobileMenu from "./MobileMenu";
 import MobileBottomNav from "./MobileBottomNav";
 
 const BRAND_NAME = "NOBSFLIPS";
@@ -39,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#07070a] text-white antialiased">
+      <body className="min-h-screen bg-[#0d0b16] text-white antialiased">
         <Script id="disable-scroll-restore" strategy="beforeInteractive">
           {`if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }`}
         </Script>
@@ -52,7 +51,6 @@ export default function RootLayout({
                 <div className="text-xs font-semibold uppercase tracking-[0.24em] text-purple-300/80">{BRAND_TAGLINE}</div>
               </Link>
               <SiteNav />
-              <MobileMenu />
             </div>
           </header>
 

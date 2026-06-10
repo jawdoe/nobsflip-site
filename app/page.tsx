@@ -10,11 +10,11 @@ function DiscordIcon() {
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#07070a] text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#0d0b16] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.22),transparent_36%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.12),transparent_34%)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/84 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0b16] via-[#0d0b16]/84 to-black/40" />
       </div>
       <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-20">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-12">

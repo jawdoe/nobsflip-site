@@ -11,7 +11,7 @@ export default function UpgradeSuccessPage() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#07070a] text-white px-4">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#0d0b16] text-white px-4">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.2),transparent_50%)]" />
       </div>

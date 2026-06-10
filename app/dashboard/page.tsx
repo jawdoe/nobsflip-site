@@ -108,7 +108,7 @@ export default function DashboardPage() {
   const filteredFlips = activeTab === "all" ? flips : flips.filter((f) => f.status === activeTab);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#07070a] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#0d0b16] text-white">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.10),transparent_40%)]" />
       </div>

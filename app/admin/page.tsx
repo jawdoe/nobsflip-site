@@ -83,11 +83,11 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#07070a] text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#0d0b16] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.2),transparent_34%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_32%)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#07070a] to-[#07070a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#0d0b16] to-[#0d0b16]" />
         <div className="absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:40px_40px]" />
       </div>
 

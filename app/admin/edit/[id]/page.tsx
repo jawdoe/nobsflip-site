@@ -120,20 +120,20 @@ export default function EditFlipPage() {
     router.push("/dashboard");
   };
 
-  if (loading) return <main className="flex min-h-screen items-center justify-center bg-[#07070a] text-white/30 text-sm">Loading...</main>;
+  if (loading) return <main className="flex min-h-screen items-center justify-center bg-[#0d0b16] text-white/30 text-sm">Loading...</main>;
 
   if (notFound) return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#07070a] text-white">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#0d0b16] text-white">
       <p className="text-white/50">Flip not found.</p>
       <Link href="/dashboard" className="rounded-2xl bg-purple-600 px-6 py-2.5 text-sm font-black text-white">Back to Dashboard</Link>
     </main>
   );
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#07070a] text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#0d0b16] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.2),transparent_34%)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#07070a] to-[#07070a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#0d0b16] to-[#0d0b16]" />
       </div>
 
       <section className="relative z-10 mx-auto max-w-[1400px] px-4 py-10 sm:px-6 md:px-8 md:py-16">

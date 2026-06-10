@@ -30,8 +30,7 @@ function LoginForm() {
         setError(error.message);
         setLoading(false);
       } else {
-        router.push(redirectTo);
-        router.refresh();
+        window.location.href = redirectTo;
       }
     } else {
       const { error } = await supabase.auth.signUp({

@@ -59,6 +59,21 @@ export async function GET(req: NextRequest) {
   const buyPrice = Number(searchParams.get("buy") ?? 0);
   const postage = Number(searchParams.get("postage") ?? 0);
 
+  const locale = searchParams.get("locale") ?? "en-AU";
+  const country = locale.split("-")[1]?.toUpperCase() ?? "AU";
+  const marketplaceMap: Record<string, { globalId: string; locatedIn: string }> = {
+    AU: { globalId: "EBAY-AU", locatedIn: "AU" },
+    US: { globalId: "EBAY-US", locatedIn: "US" },
+    GB: { globalId: "EBAY-GB", locatedIn: "GB" },
+    CA: { globalId: "EBAY-ENCA", locatedIn: "CA" },
+    NZ: { globalId: "EBAY-AU", locatedIn: "AU" },
+    DE: { globalId: "EBAY-DE", locatedIn: "DE" },
+    FR: { globalId: "EBAY-FR", locatedIn: "FR" },
+    IT: { globalId: "EBAY-IT", locatedIn: "IT" },
+    ES: { globalId: "EBAY-ES", locatedIn: "ES" },
+  };
+  const marketplace = marketplaceMap[country] ?? { globalId: "EBAY-US", locatedIn: "US" };
+
   const searchTerm = barcode || query || keyword;
 
   if (!searchTerm) {
@@ -86,7 +101,7 @@ export async function GET(req: NextRequest) {
   ebayUrl.searchParams.set("SECURITY-APPNAME", appId);
   ebayUrl.searchParams.set("RESPONSE-DATA-FORMAT", "JSON");
   ebayUrl.searchParams.set("REST-PAYLOAD", "");
-  ebayUrl.searchParams.set("GLOBAL-ID", "EBAY-AU");
+  ebayUrl.searchParams.set("GLOBAL-ID", marketplace.globalId);
   ebayUrl.searchParams.set("keywords", searchTerm);
   ebayUrl.searchParams.set("paginationInput.entriesPerPage", "20");
 
@@ -94,7 +109,7 @@ export async function GET(req: NextRequest) {
   ebayUrl.searchParams.set("itemFilter(0).value", "true");
 
   ebayUrl.searchParams.set("itemFilter(1).name", "LocatedIn");
-  ebayUrl.searchParams.set("itemFilter(1).value", "AU");
+  ebayUrl.searchParams.set("itemFilter(1).value", marketplace.locatedIn);
 
   try {
     const ebayRes = await fetch(ebayUrl.toString(), {

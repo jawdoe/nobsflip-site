@@ -62,8 +62,9 @@ export default function ScanPage() {
     setError("");
     setResult(null);
     try {
-      const params = new URLSearchParams({ barcode: finalBarcode, buy: buyPrice || "0", postage: "0" });
-      const response = await fetch("/api/sold-search?" + params.toString());
+      const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
+      const params = new URLSearchParams({ barcode: finalBarcode, buy: buyPrice || "0", postage: "0", locale });
+      const response = await fetch("/api/sold-comps?" + params.toString());
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Something went wrong");
       setResult(data);
@@ -175,11 +176,18 @@ export default function ScanPage() {
             </div>
           </div>
           {scannerOpen && (
-            <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-3">
-              <div id="barcode-reader" className="overflow-hidden rounded-xl" />
-              <button onClick={stopScanner} className="mt-3 w-full rounded-2xl border border-red-500/40 bg-red-500/10 py-2 text-sm font-black text-red-300">
-                Stop Scanner
-              </button>
+            <div className="fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm">
+              <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+                <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">
+                  {scannerLoading ? "Opening camera..." : "Point at barcode"}
+                </p>
+                <button onClick={stopScanner} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">
+                  Cancel
+                </button>
+              </div>
+              <div className="flex flex-1 items-center justify-center p-4">
+                <div id="barcode-reader" className="w-full max-w-sm overflow-hidden rounded-2xl" />
+              </div>
             </div>
           )}
         </section>

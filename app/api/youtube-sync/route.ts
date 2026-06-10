@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -120,7 +120,7 @@ export async function GET(request: Request) {
         continue;
       }
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await getSupabaseAdmin()
         .from("media_posts")
         .select("id")
         .eq("youtube_id", videoId)
@@ -134,7 +134,7 @@ export async function GET(request: Request) {
       const title = item.snippet.title;
       const description = item.snippet.description || "";
 
-      const { error } = await supabaseAdmin.from("media_posts").insert({
+      const { error } = await getSupabaseAdmin().from("media_posts").insert({
         title,
         slug: makeSlug(title, videoId),
         type: "video",

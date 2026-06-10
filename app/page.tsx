@@ -16,17 +16,17 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.12),transparent_34%)]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-[#07070a]/84 to-black/40" />
       </div>
-      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-24 pt-12 sm:px-6 md:px-8 md:pt-20">
-        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-20">
+        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:text-xs">
+            <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:px-4 md:py-2 md:text-xs">
               NoBSFlips / eBay Flip Scanner
             </div>
-            <h1 className="mt-6 text-5xl font-black uppercase leading-[0.9] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
+            <h1 className="mt-4 text-4xl font-black uppercase leading-[0.9] tracking-tight text-white sm:text-5xl md:mt-6 md:text-7xl lg:text-8xl">
               Scan It.
               <span className="block text-purple-300">Know Instantly.</span>
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-8 text-white/75 md:text-lg md:leading-9">
+            <p className="mt-4 max-w-xl text-sm leading-7 text-white/75 md:mt-6 md:text-lg md:leading-9">
               Scan a barcode at the op shop. See real eBay sold prices from your local marketplace in your currency. Get a straight answer on whether it is worth flipping.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -44,39 +44,33 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-3">
-            <div className="rounded-[2rem] border border-green-500/25 bg-green-500/10 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-              <div className="flex items-center gap-4">
-                <div className="text-3xl font-black text-green-400">YES</div>
-                <div className="text-xs font-black uppercase tracking-[0.18em] text-green-300/70">Buy It</div>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-white/60">Sold prices are strong. Margin is there. Grab it.</p>
+          <div className="grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-3">
+            <div className="rounded-2xl border border-green-500/25 bg-green-500/10 p-3 lg:rounded-[2rem] lg:p-6">
+              <div className="text-lg font-black text-green-400 lg:text-3xl">YES</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.14em] text-green-300/70 lg:mt-1 lg:text-xs">Buy It</div>
+              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Sold prices are strong. Margin is there. Grab it.</p>
             </div>
-            <div className="rounded-[2rem] border border-yellow-500/25 bg-yellow-500/10 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-              <div className="flex items-center gap-4">
-                <div className="text-3xl font-black text-yellow-400">MAYBE</div>
-                <div className="text-xs font-black uppercase tracking-[0.18em] text-yellow-300/70">Depends on Price</div>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-white/60">Could work if you get it cheap enough. Check the number.</p>
+            <div className="rounded-2xl border border-yellow-500/25 bg-yellow-500/10 p-3 lg:rounded-[2rem] lg:p-6">
+              <div className="text-lg font-black text-yellow-400 lg:text-3xl">MAYBE</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.14em] text-yellow-300/70 lg:mt-1 lg:text-xs">Depends</div>
+              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Could work if you get it cheap enough. Check the number.</p>
             </div>
-            <div className="rounded-[2rem] border border-red-500/25 bg-red-500/10 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-              <div className="flex items-center gap-4">
-                <div className="text-3xl font-black text-red-400">HELL NO</div>
-                <div className="text-xs font-black uppercase tracking-[0.18em] text-red-300/70">Walk Away</div>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-white/60">Not selling. Not worth the risk. Leave it on the shelf.</p>
+            <div className="rounded-2xl border border-red-500/25 bg-red-500/10 p-3 lg:rounded-[2rem] lg:p-6">
+              <div className="text-base font-black text-red-400 lg:text-3xl">HELL NO</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.14em] text-red-300/70 lg:mt-1 lg:text-xs">Walk Away</div>
+              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Not selling. Not worth the risk. Leave it on the shelf.</p>
             </div>
           </div>
         </div>
-        <div className="mt-20">
+        <div className="mt-12 md:mt-20">
           <p className="text-center text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">How It Works</p>
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 md:mt-6 md:gap-4">
             <Step num="1" title="Scan the barcode" body="Point your camera at any barcode or type the GTIN manually." />
             <Step num="2" title="See local sold prices" body="Real completed eBay listings from your local marketplace in your currency. Not asking prices. Actual sales." />
             <Step num="3" title="Get your verdict" body="Enter your buy price and get a straight Yes, Maybe, or Hell No." />
           </div>
         </div>
-        <div className="mt-16 rounded-[2rem] border border-purple-500/20 bg-purple-500/5 p-8 lg:flex lg:items-center lg:justify-between lg:gap-12">
+        <div className="mt-8 rounded-[2rem] border border-purple-500/20 bg-purple-500/5 p-5 md:mt-16 md:p-8 lg:flex lg:items-center lg:justify-between lg:gap-12">
           <div className="flex items-center gap-5">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-purple-600/20 text-purple-300">
               <DiscordIcon />
@@ -92,7 +86,7 @@ export default function HomePage() {
             href="https://discord.gg/bvThRRf9Y5"
             target="_blank"
             rel="noreferrer"
-            className="mt-6 inline-flex shrink-0 items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0"
+            className="mt-4 flex w-full items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0 lg:w-auto lg:inline-flex lg:shrink-0"
           >
             Join Now
           </a>

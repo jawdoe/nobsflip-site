@@ -3,6 +3,7 @@ import Link from "next/link";
 import Script from "next/script";
 import "./globals.css";
 import SiteNav from "./SiteNav";
+import MobileMenu from "./MobileMenu";
 
 const BRAND_NAME = "NOBSFLIPS";
 const BRAND_TAGLINE = "No Bullshit. Just Flips.";
@@ -29,8 +30,8 @@ export default function RootLayout({
         </Script>
 
         <div className="relative flex min-h-screen flex-col overflow-x-hidden">
-          <header className="sticky top-0 z-50 hidden border-b border-purple-500/15 bg-black/85 backdrop-blur-xl md:block">
-            <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
+          <header className="sticky top-0 z-50 border-b border-purple-500/15 bg-black/85 backdrop-blur-xl">
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
               <Link href="/" className="group">
                 <div className="text-lg font-black tracking-[0.32em] text-white">
                   {BRAND_NAME}
@@ -41,6 +42,7 @@ export default function RootLayout({
               </Link>
 
               <SiteNav />
+              <MobileMenu />
             </div>
           </header>
 

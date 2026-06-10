@@ -9,7 +9,7 @@ import type { User } from "@supabase/supabase-js";
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/scan", label: "Scan" },
-  { href: "/history", label: "History" },
+  { href: "/dashboard", label: "Dashboard" },
 ];
 
 export default function SiteNav() {
@@ -75,8 +75,4 @@ export default function SiteNav() {
           className="ml-2 rounded-xl border border-purple-400/40 bg-purple-500/15 px-4 py-2 text-sm font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25"
         >
           Sign In
-        </Link>
-      )}
-    </nav>
-  );
-}
+      

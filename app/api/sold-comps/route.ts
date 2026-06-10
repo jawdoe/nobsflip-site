@@ -84,6 +84,7 @@ export async function GET(req: NextRequest) {
   }
 
   const appId = process.env.EBAY_CLIENT_ID;
+  const ebayEnv = process.env.EBAY_ENV ?? "production";
 
   if (!appId) {
     return NextResponse.json(
@@ -92,9 +93,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const ebayUrl = new URL(
-    "https://svcs.ebay.com/services/search/FindingService/v1"
-  );
+  const baseHost = ebayEnv === "sandbox"
+    ? "svcs.sandbox.ebay.com"
+    : "svcs.ebay.com";
+
+  const ebayUrl = new URL(`https://${baseHost}/services/search/FindingService/v1`);
 
   ebayUrl.searchParams.set("OPERATION-NAME", "findCompletedItems");
   ebayUrl.searchParams.set("SERVICE-VERSION", "1.13.0");
@@ -120,7 +123,11 @@ export async function GET(req: NextRequest) {
     if (!contentType.includes("json")) {
       const text = await ebayRes.text();
       return NextResponse.json(
-        { error: "eBay returned non-JSON response", details: text.slice(0, 500) },
+        {
+          error: "eBay returned non-JSON response",
+          details: text.slice(0, 300),
+          debug: { env: ebayEnv, host: baseHost, appIdPrefix: appId.slice(0, 8) },
+        },
         { status: 502 }
       );
     }

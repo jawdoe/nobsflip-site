@@ -46,16 +46,27 @@ async function getEbayToken(clientId: string, clientSecret: string): Promise<str
   return data.access_token as string;
 }
 
-async function fetchFindingApi(appId: string, searchTerm: string, marketplace: typeof marketplaceMap[string]): Promise<SoldItem[] | null> {
-  const qs = ["OPERATION-NAME=findCompletedItems","SERVICE-VERSION=1.13.0",`SECURITY-APPNAME=${encodeURIComponent(appId)}`,"RESPONSE-DATA-FORMAT=JSON",`GLOBAL-ID=${marketplace.globalId}`,`keywords=${encodeURIComponent(searchTerm)}`,"paginationInput.entriesPerPage=20","itemFilter(0).name=SoldItemsOnly","itemFilter(0).value=true","itemFilter(1).name=LocatedIn",`itemFilter(1).value=${marketplace.locatedIn}`].join("&");
-  const res = await fetch(`https://svcs.ebay.com/services/search/FindingService/v1?${qs}`, { cache: "no-store" });
-  const contentType = res.headers.get("content-type") ?? "";
-  if (!contentType.includes("json")) { console.error("[FindingAPI] Non-JSON response, status:", res.status); return null; }
-  const data = await res.json();
-  const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];
-  if (ack === "Failure") { const errMsg = data?.findCompletedItemsResponse?.[0]?.errorMessage?.[0]?.error?.[0]?.message?.[0]; console.error("[FindingAPI] Failure:", errMsg ?? JSON.stringify(data).slice(0, 300)); return null; }
-  const rawItems = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item ?? [];
-  return rawItems.map((item: any) => { const p = item.sellingStatus?.[0]?.currentPrice?.[0]; return { title: getText(item.title) ?? "Unknown", price: toNumber(p?.__value__), currency: p?.["@currencyId"] ?? marketplace.currency, url: getText(item.viewItemURL) ?? "#", image: getText(item.galleryURL), condition: getText(item.condition?.[0]?.conditionDisplayName), soldDate: getText(item.listingInfo?.[0]?.endTime) }; }).filter((i: SoldItem) => i.price > 0);
+async function fetchFindingApi(appId: string, searchTerm: string, marketplace: typeof marketplaceMap[string]): Promise<{ items: SoldItem[] | null; error: string | null }> {
+  try {
+    const qs = ["OPERATION-NAME=findCompletedItems","SERVICE-VERSION=1.13.0",`SECURITY-APPNAME=${encodeURIComponent(appId)}`,"RESPONSE-DATA-FORMAT=JSON",`GLOBAL-ID=${marketplace.globalId}`,`keywords=${encodeURIComponent(searchTerm)}`,"paginationInput.entriesPerPage=20","itemFilter(0).name=SoldItemsOnly","itemFilter(0).value=true","itemFilter(1).name=LocatedIn",`itemFilter(1).value=${marketplace.locatedIn}`].join("&");
+    const res = await fetch(`https://svcs.ebay.com/services/search/FindingService/v1?${qs}`, { cache: "no-store" });
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.includes("json")) {
+      const body = await res.text();
+      return { items: null, error: `HTTP ${res.status} - non-JSON response: ${body.slice(0, 200)}` };
+    }
+    const data = await res.json();
+    const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];
+    if (ack === "Failure") {
+      const errMsg = data?.findCompletedItemsResponse?.[0]?.errorMessage?.[0]?.error?.[0]?.message?.[0] ?? JSON.stringify(data).slice(0, 300);
+      return { items: null, error: `eBay error: ${errMsg}` };
+    }
+    const rawItems = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item ?? [];
+    const items = rawItems.map((item: any) => { const p = item.sellingStatus?.[0]?.currentPrice?.[0]; return { title: getText(item.title) ?? "Unknown", price: toNumber(p?.__value__), currency: p?.["@currencyId"] ?? marketplace.currency, url: getText(item.viewItemURL) ?? "#", image: getText(item.galleryURL), condition: getText(item.condition?.[0]?.conditionDisplayName), soldDate: getText(item.listingInfo?.[0]?.endTime) }; }).filter((i: SoldItem) => i.price > 0);
+    return { items, error: null };
+  } catch (e) {
+    return { items: null, error: `Exception: ${e instanceof Error ? e.message : String(e)}` };
+  }
 }
 
 async function fetchBrowseApi(token: string, searchTerm: string, marketplace: typeof marketplaceMap[string]): Promise<SoldItem[]> {
@@ -91,23 +102,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    let items = await fetchFindingApi(clientId, searchTerm, marketplace);
+    const findingResult = await fetchFindingApi(clientId, searchTerm, marketplace);
+    let items = findingResult.items;
     let dataSource = "EBAY_FINDING_SOLD";
     let warning = "";
-    let findingApiStatus = items === null ? "FAILED" : `OK - ${items.length} results`;
+    let findingApiStatus = items === null ? `FAILED: ${findingResult.error}` : `OK - ${items.length} results`;
 
     if (barcodeResolved && items !== null && items.length === 0) {
       const fallback = await fetchFindingApi(clientId, rawBarcode!, marketplace);
-      if (fallback && fallback.length > 0) { items = fallback; searchTerm = rawBarcode!; barcodeResolved = false; findingApiStatus = `OK via raw barcode - ${items.length} results`; }
+      if (fallback.items && fallback.items.length > 0) { items = fallback.items; searchTerm = rawBarcode!; barcodeResolved = false; findingApiStatus = `OK via raw barcode - ${items.length} results`; }
     }
 
     if (!items) {
-      if (!clientSecret) return NextResponse.json({ error: "eBay sold data unavailable" }, { status: 502 });
+      if (!clientSecret) return NextResponse.json({ error: "eBay sold data unavailable", _debug: { findingApiStatus, country, marketplace: marketplace.globalId } }, { status: 502 });
       const token = await getEbayToken(clientId, clientSecret);
       items = await fetchBrowseApi(token, searchTerm, marketplace);
       dataSource = "EBAY_BROWSE_ACTIVE";
       warning = "Showing active listing prices, not what items actually sold for.";
-      findingApiStatus = "FAILED - using Browse API fallback";
+      findingApiStatus = `FAILED (using Browse fallback): ${findingResult.error}`;
     }
 
     const prices = items.map((i) => i.price);

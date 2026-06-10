@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
-  allowedDevOrigins: ["127.0.0.1"],
   images: {
     remotePatterns: [
       {
@@ -16,7 +13,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "media.discordapp.net",
+        hostname: "i.ebayimg.com",
       },
     ],
   },

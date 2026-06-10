@@ -9,6 +9,7 @@ type EbayResult = {
   buyPrice: number; postage: number; feeRate: number; resultCount: number;
   averagePrice: number; medianPrice: number; estimatedSalePrice: number;
   ebayFeeEstimate: number; estimatedProfit: number; roi: number;
+  lowPrice: number; highPrice: number; isPremium: boolean;
   verdict: "BUY" | "MAYBE" | "SKIP";
   _debug?: { findingApiStatus: string; country: string; marketplace: string };
   items: { title: string; price: string; currency: string; condition: string; soldDate: string; url: string; }[];
@@ -78,7 +79,8 @@ export default function ScanPage() {
     setStep("loading"); setError(""); setResult(null); setSaveStatus(null); setFlipSave(null); setFlipId(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
-      const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: post, locale });
+      const { data: { user } } = await supabase.auth.getUser();
+      const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: post, locale, ...(user ? { userId: user.id } : {}) });
       const response = await fetch("/api/sold-comps?" + params.toString());
       const text = await response.text();
       let data: any;
@@ -86,7 +88,6 @@ export default function ScanPage() {
       if (!response.ok) throw new Error(data.error ?? "Something went wrong");
       setResult(data);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { error: insertError } = await supabase.from("scans").insert({ user_id: user.id, barcode: scannedBarcode || null, search_term: data.search, buy_price: data.buyPrice ?? 0, median_price: data.medianPrice ?? 0, estimated_profit: data.estimatedProfit ?? 0, roi: data.roi ?? 0, verdict: data.verdict, result_count: data.resultCount ?? 0, data_source: data.dataSource });
           if (insertError) { console.error("Scan save error:", insertError); setSaveStatus("failed"); }
@@ -339,6 +340,31 @@ export default function ScanPage() {
               <StatCard label="Est. profit" value={formatMoney(result.estimatedProfit)} highlight={result.estimatedProfit > 0} />
               <StatCard label="ROI" value={result.roi.toFixed(0) + "%"} highlight={result.roi > 0} />
             </div>
+            {result.isPremium && result.lowPrice > 0 && result.highPrice > 0 && (
+              <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-4 py-3">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-purple-300/60">Price Range (sold)</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-white/50">Low {formatMoney(result.lowPrice)}</span>
+                  <div className="flex-1 rounded-full bg-white/10 h-1.5 relative">
+                    <div className="absolute inset-y-0 rounded-full bg-purple-400"
+                      style={{ left: "0%", right: `${100 - ((result.medianPrice - result.lowPrice) / (result.highPrice - result.lowPrice || 1)) * 100}%` }} />
+                  </div>
+                  <span className="text-sm text-white/50">High {formatMoney(result.highPrice)}</span>
+                </div>
+                <p className="mt-1.5 text-center text-xs text-purple-200">Median {formatMoney(result.medianPrice)}</p>
+              </div>
+            )}
+            {!result.isPremium && (
+              <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black text-white/30">Price range & real sold data</p>
+                  <p className="text-[10px] text-white/20">See exactly what items sell for, low to high</p>
+                </div>
+                <a href="/pricing" className="shrink-0 rounded-xl border border-purple-500/30 bg-purple-500/15 px-3 py-1.5 text-xs font-black text-purple-300 transition hover:bg-purple-500/25">
+                  Premium →
+                </a>
+              </div>
+            )}
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/40">
               Costs: buy {formatMoney(result.buyPrice)}
               {result.postage > 0 ? ` + postage ${formatMoney(result.postage)} (you cover)` : " + buyer pays post"}

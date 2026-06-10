@@ -1,0 +1,19 @@
+{
+  "name": "NoBSFlips",
+  "short_name": "NoBSFlips",
+  "description": "Barcode scanner and flip tracker for eBay resellers",
+  "start_url": "/scan",
+  "display": "standalone",
+  "background_color": "#07070a",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["shopping", "finance", "utilities"],
+  "shortcuts": [
+    { "name": "Scan", "url": "/scan", "description": "Scan a barcode" },
+    { "name": "Dashboard", "url": "/dashboard", "description": "View your flips" }
+  ]
+}

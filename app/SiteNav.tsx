@@ -10,6 +10,7 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/scan", label: "Scan" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export default function SiteNav() {

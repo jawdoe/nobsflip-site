@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isPremium } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +15,16 @@ function looksLikeBarcode(s: string) { return /^\d{8,14}$/.test(s.trim()); }
 
 const ebayFeeRate: Record<string, number> = { AU: 0.134, US: 0.1325, GB: 0.128, CA: 0.1325, NZ: 0.134, DE: 0.125, FR: 0.125, IT: 0.125, ES: 0.125 };
 
-const marketplaceMap: Record<string, { globalId: string; locatedIn: string; currency: string; browseId: string }> = {
-  AU: { globalId: "EBAY-AU", locatedIn: "AU", currency: "AUD", browseId: "EBAY_AU" },
-  US: { globalId: "EBAY-US", locatedIn: "US", currency: "USD", browseId: "EBAY_US" },
-  GB: { globalId: "EBAY-GB", locatedIn: "GB", currency: "GBP", browseId: "EBAY_GB" },
-  CA: { globalId: "EBAY-ENCA", locatedIn: "CA", currency: "CAD", browseId: "EBAY_CA" },
-  NZ: { globalId: "EBAY-AU", locatedIn: "AU", currency: "AUD", browseId: "EBAY_AU" },
-  DE: { globalId: "EBAY-DE", locatedIn: "DE", currency: "EUR", browseId: "EBAY_DE" },
-  FR: { globalId: "EBAY-FR", locatedIn: "FR", currency: "EUR", browseId: "EBAY_FR" },
-  IT: { globalId: "EBAY-IT", locatedIn: "IT", currency: "EUR", browseId: "EBAY_IT" },
-  ES: { globalId: "EBAY-ES", locatedIn: "ES", currency: "EUR", browseId: "EBAY_ES" },
+const marketplaceMap: Record<string, { globalId: string; locatedIn: string; currency: string; browseId: string; apifySite: string }> = {
+  AU: { globalId: "EBAY-AU", locatedIn: "AU", currency: "AUD", browseId: "EBAY_AU", apifySite: "ebay.com.au" },
+  US: { globalId: "EBAY-US", locatedIn: "US", currency: "USD", browseId: "EBAY_US", apifySite: "ebay.com" },
+  GB: { globalId: "EBAY-GB", locatedIn: "GB", currency: "GBP", browseId: "EBAY_GB", apifySite: "ebay.co.uk" },
+  CA: { globalId: "EBAY-ENCA", locatedIn: "CA", currency: "CAD", browseId: "EBAY_CA", apifySite: "ebay.ca" },
+  NZ: { globalId: "EBAY-AU", locatedIn: "AU", currency: "AUD", browseId: "EBAY_AU", apifySite: "ebay.com.au" },
+  DE: { globalId: "EBAY-DE", locatedIn: "DE", currency: "EUR", browseId: "EBAY_DE", apifySite: "ebay.de" },
+  FR: { globalId: "EBAY-FR", locatedIn: "FR", currency: "EUR", browseId: "EBAY_FR", apifySite: "ebay.fr" },
+  IT: { globalId: "EBAY-IT", locatedIn: "IT", currency: "EUR", browseId: "EBAY_IT", apifySite: "ebay.it" },
+  ES: { globalId: "EBAY-ES", locatedIn: "ES", currency: "EUR", browseId: "EBAY_ES", apifySite: "ebay.es" },
 };
 
 async function resolveBarcode(barcode: string): Promise<string | null> {
@@ -46,6 +47,49 @@ async function getEbayToken(clientId: string, clientSecret: string): Promise<str
   return data.access_token as string;
 }
 
+async function fetchApify(searchTerm: string, marketplace: typeof marketplaceMap[string]): Promise<{ items: SoldItem[] | null; error: string | null }> {
+  const token = process.env.APIFY_TOKEN;
+  if (!token) return { items: null, error: "No APIFY_TOKEN configured" };
+  try {
+    // Run the actor synchronously (waits for result, up to 60s)
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/caffein.dev~ebay-sold-listings/run-sync-get-dataset-items?token=${token}&timeout=45&memory=256`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keywords: [searchTerm],
+          ebaySite: marketplace.apifySite,
+          count: 25,
+          daysToScrape: 60,
+          sortOrder: "endedRecently",
+        }),
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text();
+      return { items: null, error: `Apify HTTP ${res.status}: ${body.slice(0, 200)}` };
+    }
+    const data = await res.json();
+    if (!Array.isArray(data)) return { items: null, error: "Unexpected Apify response shape" };
+    const items: SoldItem[] = data
+      .map((item: any) => ({
+        title: item.title ?? "Unknown",
+        price: Number(item.soldPrice ?? 0),
+        currency: item.soldCurrency ?? marketplace.currency,
+        url: item.url ?? "#",
+        image: null,
+        condition: null,
+        soldDate: item.endedAt ?? null,
+      }))
+      .filter((i: SoldItem) => i.price > 0);
+    return { items, error: null };
+  } catch (e) {
+    return { items: null, error: `Apify exception: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
 async function fetchFindingApi(appId: string, searchTerm: string, marketplace: typeof marketplaceMap[string]): Promise<{ items: SoldItem[] | null; error: string | null }> {
   try {
     const params = [
@@ -59,8 +103,7 @@ async function fetchFindingApi(appId: string, searchTerm: string, marketplace: t
       "itemFilter(0).name=SoldItemsOnly",
       "itemFilter(0).value=true",
     ];
-    const qs = params.join("&");
-    const res = await fetch(`https://svcs.ebay.com/services/search/FindingService/v1?${qs}`, { cache: "no-store" });
+    const res = await fetch(`https://svcs.ebay.com/services/search/FindingService/v1?${params.join("&")}`, { cache: "no-store" });
     const contentType = res.headers.get("content-type") ?? "";
     if (!contentType.includes("json")) {
       const body = await res.text();
@@ -104,6 +147,7 @@ export async function GET(req: NextRequest) {
   const buyPrice = Number(searchParams.get("buy") ?? 0);
   const postage = Number(searchParams.get("postage") ?? 0);
   const locale = searchParams.get("locale") ?? "en-AU";
+  const userId = searchParams.get("userId")?.trim();
   const country = locale.split("-")[1]?.toUpperCase() ?? "AU";
   const marketplace = marketplaceMap[country] ?? marketplaceMap["AU"];
   const rawSearchTerm = rawBarcode || query || keyword;
@@ -113,6 +157,8 @@ export async function GET(req: NextRequest) {
   const clientSecret = process.env.EBAY_CLIENT_SECRET;
   if (!clientId) return NextResponse.json({ error: "Missing EBAY_CLIENT_ID" }, { status: 500 });
 
+  const userIsPremium = userId ? await isPremium(userId) : false;
+
   let searchTerm = rawSearchTerm;
   let barcodeResolved = false;
   if (rawBarcode && looksLikeBarcode(rawBarcode)) {
@@ -121,34 +167,58 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const findingResult = await fetchFindingApi(clientId, searchTerm, marketplace);
-    let items = findingResult.items;
+    let items: SoldItem[] | null = null;
     let dataSource = "EBAY_FINDING_SOLD";
     let warning = "";
-    let findingApiStatus = items === null ? `FAILED: ${findingResult.error}` : `OK - ${items.length} results`;
+    let findingApiStatus = "";
 
-    if (barcodeResolved && items !== null && items.length === 0) {
-      const fallback = await fetchFindingApi(clientId, rawBarcode!, marketplace);
-      if (fallback.items && fallback.items.length > 0) {
-        items = fallback.items;
-        searchTerm = rawBarcode!;
-        barcodeResolved = false;
-        findingApiStatus = `OK via raw barcode - ${items.length} results`;
+    // Premium: try Apify first for real sold data
+    if (userIsPremium) {
+      const apifyResult = await fetchApify(searchTerm, marketplace);
+      if (apifyResult.items && apifyResult.items.length > 0) {
+        items = apifyResult.items;
+        dataSource = "APIFY_SOLD";
+        findingApiStatus = `Apify OK - ${items.length} results`;
+      } else {
+        findingApiStatus = `Apify failed (${apifyResult.error}) - falling back`;
       }
     }
 
+    // Free / Apify fallback: try eBay Finding API
+    if (!items) {
+      const findingResult = await fetchFindingApi(clientId, searchTerm, marketplace);
+      items = findingResult.items;
+      if (items !== null) {
+        findingApiStatus += ` FindingAPI OK - ${items.length} results`;
+      } else {
+        findingApiStatus += ` FindingAPI FAILED: ${findingResult.error}`;
+      }
+
+      // Barcode fallback: try raw barcode if resolved name gave 0 results
+      if (barcodeResolved && items !== null && items.length === 0) {
+        const fallback = await fetchFindingApi(clientId, rawBarcode!, marketplace);
+        if (fallback.items && fallback.items.length > 0) {
+          items = fallback.items; searchTerm = rawBarcode!; barcodeResolved = false;
+          findingApiStatus += ` (raw barcode fallback)`;
+        }
+      }
+    }
+
+    // Last resort: Browse API (active listings)
     if (!items) {
       if (!clientSecret) return NextResponse.json({ error: "eBay sold data unavailable", _debug: { findingApiStatus, country, marketplace: marketplace.globalId } }, { status: 502 });
       const token = await getEbayToken(clientId, clientSecret);
       items = await fetchBrowseApi(token, searchTerm, marketplace);
       dataSource = "EBAY_BROWSE_ACTIVE";
       warning = "Showing active listing prices, not what items actually sold for.";
-      findingApiStatus = `FAILED (Browse fallback): ${findingResult.error}`;
+      findingApiStatus += " → Browse fallback";
     }
 
     const prices = items.map((i) => i.price);
     const averagePrice = prices.length ? prices.reduce((s, p) => s + p, 0) / prices.length : 0;
     const medianPrice = median(prices);
+    const lowPrice = prices.length ? Math.min(...prices) : 0;
+    const highPrice = prices.length ? Math.max(...prices) : 0;
     const estimatedSalePrice = medianPrice || averagePrice;
     const feeRate = ebayFeeRate[country] ?? 0.135;
     const ebayFeeEstimate = estimatedSalePrice * feeRate;
@@ -161,12 +231,15 @@ export async function GET(req: NextRequest) {
       resolvedFrom: barcodeResolved ? rawBarcode : null,
       searchType: rawBarcode ? "BARCODE" : "QUERY",
       dataSource, warning,
+      isPremium: userIsPremium,
       buyPrice: cleanNumber(buyPrice),
       postage: cleanNumber(postage),
       feeRate: cleanNumber(feeRate),
       resultCount: items.length,
       averagePrice: cleanNumber(averagePrice),
       medianPrice: cleanNumber(medianPrice),
+      lowPrice: cleanNumber(lowPrice),
+      highPrice: cleanNumber(highPrice),
       estimatedSalePrice: cleanNumber(estimatedSalePrice),
       ebayFeeEstimate: cleanNumber(ebayFeeEstimate),
       estimatedProfit: cleanNumber(estimatedProfit),

@@ -267,9 +267,13 @@ export default function ScanPage() {
 
         {result && vc && (
           <div className="mt-4 space-y-3">
-            {result.warning && (
+            {result.dataSource === "EBAY_BROWSE_ACTIVE" ? (
               <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs leading-5 text-yellow-300">
-                <span className="font-black">Note:</span> Showing current asking prices, not sold prices. Use as a guide only — actual sell price may differ.
+                <span className="font-black">Heads up:</span> Showing current asking prices, not what items actually sold for. Use as a rough guide only.
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-xs text-green-300">
+                <span className="font-black">✓ Real sold data</span> — prices items actually sold for on eBay.
               </div>
             )}
             <div className={"w-full rounded-[2rem] border p-6 text-center " + vc.border + " " + vc.bg}>

@@ -45,6 +45,24 @@ function getVerdict(profit: number, roi: number, soldCount: number): Verdict {
   return "SKIP";
 }
 
+// eBay final value fee rates by marketplace (2026)
+// AU: 13.4% (standard plan; free plan exists for <$25k/yr but we can't detect it)
+// US: 13.25% (most categories)
+// GB: 12.8% (business sellers; private sellers pay 0% but we assume business for safety)
+// CA: 13.25%
+// EU: 12.5% average
+const ebayFeeRate: Record<string, number> = {
+  AU: 0.134,
+  US: 0.1325,
+  GB: 0.128,
+  CA: 0.1325,
+  NZ: 0.134,
+  DE: 0.125,
+  FR: 0.125,
+  IT: 0.125,
+  ES: 0.125,
+};
+
 const marketplaceMap: Record<string, { globalId: string; locatedIn: string; currency: string; browseId: string }> = {
   AU: { globalId: "EBAY-AU", locatedIn: "AU", currency: "AUD", browseId: "EBAY_AU" },
   US: { globalId: "EBAY-US", locatedIn: "US", currency: "USD", browseId: "EBAY_US" },
@@ -246,7 +264,8 @@ export async function GET(req: NextRequest) {
     const averagePrice = prices.length ? prices.reduce((s, p) => s + p, 0) / prices.length : 0;
     const medianPrice = median(prices);
     const estimatedSalePrice = medianPrice || averagePrice;
-    const ebayFeeEstimate = estimatedSalePrice * 0.14;
+    const feeRate = ebayFeeRate[country] ?? 0.135;
+    const ebayFeeEstimate = estimatedSalePrice * feeRate;
     const estimatedProfit = estimatedSalePrice - buyPrice - postage - ebayFeeEstimate;
     const roi = buyPrice > 0 ? (estimatedProfit / buyPrice) * 100 : 0;
     const verdict = getVerdict(estimatedProfit, roi, items.length);
@@ -263,6 +282,7 @@ export async function GET(req: NextRequest) {
       averagePrice: cleanNumber(averagePrice),
       medianPrice: cleanNumber(medianPrice),
       estimatedSalePrice: cleanNumber(estimatedSalePrice),
+      feeRate: cleanNumber(feeRate),
       ebayFeeEstimate: cleanNumber(ebayFeeEstimate),
       estimatedProfit: cleanNumber(estimatedProfit),
       roi: cleanNumber(roi),

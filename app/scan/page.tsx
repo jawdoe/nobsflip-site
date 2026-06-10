@@ -11,6 +11,7 @@ type EbayResult = {
   warning: string;
   buyPrice: number;
   postage: number;
+  feeRate: number;
   resultCount: number;
   averagePrice: number;
   medianPrice: number;
@@ -28,6 +29,55 @@ type EbayResult = {
     url: string;
   }[];
 };
+
+// Country-specific postage presets
+const postagePresets: Record<string, { label: string; value: string }[]> = {
+  AU: [
+    { label: "Free", value: "0" },
+    { label: "XS $10", value: "10.05" },
+    { label: "S $11.50", value: "11.50" },
+    { label: "M $15.65", value: "15.65" },
+    { label: "L $19.75", value: "19.75" },
+  ],
+  US: [
+    { label: "Free", value: "0" },
+    { label: "$4", value: "4" },
+    { label: "$6", value: "6" },
+    { label: "$10", value: "10" },
+    { label: "$15", value: "15" },
+  ],
+  GB: [
+    { label: "Free", value: "0" },
+    { label: "£3", value: "3" },
+    { label: "£5", value: "5" },
+    { label: "£8", value: "8" },
+    { label: "£12", value: "12" },
+  ],
+  CA: [
+    { label: "Free", value: "0" },
+    { label: "$8", value: "8" },
+    { label: "$12", value: "12" },
+    { label: "$18", value: "18" },
+  ],
+  NZ: [
+    { label: "Free", value: "0" },
+    { label: "$6", value: "6" },
+    { label: "$9", value: "9" },
+    { label: "$14", value: "14" },
+  ],
+};
+const defaultPresets = [
+  { label: "Free", value: "0" },
+  { label: "$5", value: "5" },
+  { label: "$10", value: "10" },
+  { label: "$15", value: "15" },
+];
+
+function getCountry() {
+  if (typeof navigator === "undefined") return "AU";
+  const locale = navigator.language ?? "en-AU";
+  return locale.split("-")[1]?.toUpperCase() ?? "AU";
+}
 
 function formatMoney(value: number) {
   const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
@@ -57,8 +107,15 @@ export default function ScanPage() {
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState<"saved" | "failed" | null>(null);
+  const [country, setCountry] = useState("AU");
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    setCountry(getCountry());
+  }, []);
+
+  const presets = postagePresets[country] ?? defaultPresets;
 
   async function runCheck(scannedBarcode: string, price: string, post: string) {
     setStep("loading");
@@ -165,8 +222,8 @@ export default function ScanPage() {
             <div>
               <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">Scan Barcode</p>
               <p className="text-xs text-white/40">
-                {buyPrice ? `Buy: ${formatMoney(Number(buyPrice))}` : "No buy price set"}
-                {postage ? ` · Postage: ${formatMoney(Number(postage))}` : ""}
+                {buyPrice ? `Buy: ${formatMoney(Number(buyPrice))}` : "No buy price"}
+                {postage && postage !== "0" ? ` · Post: ${formatMoney(Number(postage))}` : " · Free post"}
               </p>
             </div>
             <button onClick={stopCamera} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">
@@ -183,8 +240,8 @@ export default function ScanPage() {
       {step === "price" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-white">Enter prices before scanning</h2>
-            <p className="mt-1 text-sm text-white/50">What is the price tag? Rough postage estimate?</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">Set prices before scanning</h2>
+            <p className="mt-1 text-sm text-white/50">What is the price tag? Who pays postage?</p>
 
             <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Buy price</label>
             <input
@@ -198,17 +255,30 @@ export default function ScanPage() {
               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30"
             />
 
-            <label className="mt-4 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Postage / shipping cost</label>
+            <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Postage cost (you pay)</label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {presets.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setPostage(p.value)}
+                  className={"rounded-xl border px-3 py-1.5 text-xs font-black transition " + (postage === p.value ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/50 hover:text-white")}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
             <input
               type="number"
               min="0"
               value={postage}
               onChange={(e) => setPostage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && startCamera()}
-              placeholder="0.00"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30"
+              placeholder="or type custom amount"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/20 focus:border-purple-400/60"
             />
-            <p className="mt-1 text-xs text-white/30">Leave at 0 if you will drop-off or it is free postage.</p>
+            <p className="mt-1 text-xs text-white/25">
+              {country === "AU" ? "AU Post: XS $10.05 · S $11.50 · M $15.65 · L $19.75" : "Set 0 if buyer pays or you drop off."}
+            </p>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <button onClick={() => setStep("idle")} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">
@@ -297,6 +367,19 @@ export default function ScanPage() {
                 {step === "loading" ? "Checking..." : "Check"}
               </button>
             </div>
+            <div className="mt-3 flex flex-wrap gap-2 border-t border-white/5 pt-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/25 self-center">Postage:</span>
+              {presets.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setPostage(p.value)}
+                  className={"rounded-xl border px-3 py-1 text-xs font-black transition " + (postage === p.value ? "border-purple-400/50 bg-purple-500/20 text-purple-200" : "border-white/10 text-white/40 hover:text-white")}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </section>
         </div>
 
@@ -318,7 +401,7 @@ export default function ScanPage() {
             )}
             {result.resolvedFrom && (
               <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-xs text-purple-300">
-                Barcode <span className="font-black">{result.resolvedFrom}</span> resolved to: <span className="font-black">{result.search}</span>
+                Barcode <span className="font-black">{result.resolvedFrom}</span> → <span className="font-black">{result.search}</span>
               </div>
             )}
             {result.dataSource === "EBAY_BROWSE_ACTIVE" ? (
@@ -327,35 +410,31 @@ export default function ScanPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-xs text-green-300">
-                <span className="font-black">Real sold data</span> - prices items actually sold for on eBay.
+                <span className="font-black">Real sold data</span> — prices items actually sold for on eBay.
               </div>
             )}
             <div className={"w-full rounded-[2rem] border p-6 text-center " + vc.border + " " + vc.bg}>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Verdict</p>
               <h2 className={"mt-2 text-4xl font-black sm:text-5xl " + vc.text}>{vc.label}</h2>
               <p className="mt-2 text-xs text-white/50">
-                {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Current listings" : "Sold listings"} - {result.resultCount} results
+                {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Current listings" : "Sold listings"} — {result.resultCount} results
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <StatCard label="Median sale" value={formatMoney(result.medianPrice)} />
-              <StatCard label="eBay fees (~14%)" value={formatMoney(result.ebayFeeEstimate)} />
+              <StatCard label={`eBay fees (${((result.feeRate ?? 0.135) * 100).toFixed(1)}%)`} value={formatMoney(result.ebayFeeEstimate)} />
               <StatCard label="Est. profit" value={formatMoney(result.estimatedProfit)} highlight={result.estimatedProfit > 0} />
               <StatCard label="ROI" value={result.roi.toFixed(0) + "%"} highlight={result.roi > 0} />
             </div>
-            {(result.buyPrice > 0 || result.postage > 0) && (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/40">
-                Costs factored in: buy {formatMoney(result.buyPrice)}
-                {result.postage > 0 ? ` + postage ${formatMoney(result.postage)}` : ""}
-                {` + eBay fees ${formatMoney(result.ebayFeeEstimate)}`}
-              </div>
-            )}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/40">
+              Costs: buy {formatMoney(result.buyPrice)}
+              {result.postage > 0 ? ` + postage ${formatMoney(result.postage)}` : " + free post"}
+              {` + eBay ${formatMoney(result.ebayFeeEstimate)}`}
+            </div>
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-black uppercase tracking-tight">
-                  {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Active Listings" : "Sold Listings"}
-                </h3>
-              </div>
+              <h3 className="mb-3 text-sm font-black uppercase tracking-tight">
+                {result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Active Listings" : "Sold Listings"}
+              </h3>
               <div className="space-y-2 lg:max-h-[400px] lg:overflow-y-auto">
                 {result.items.map((item, index) => (
                   <a
@@ -368,7 +447,7 @@ export default function ScanPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-white">{item.title}</p>
                       <p className="mt-0.5 text-xs text-white/40">
-                        {item.condition}{item.soldDate ? " - " + item.soldDate : ""}
+                        {item.condition}{item.soldDate ? " — " + item.soldDate : ""}
                       </p>
                     </div>
                     <p className="shrink-0 text-sm font-black text-purple-300">{formatMoney(Number(item.price))}</p>

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 function YouTubeIcon() {
   return (
@@ -34,32 +34,22 @@ export default function HomePage() {
       </div>
 
       <section className="relative z-10 mx-auto w-full max-w-[1200px] px-4 pb-24 pt-12 sm:px-6 md:px-8 md:pt-20">
-
         <div className="mx-auto max-w-3xl text-center">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:text-xs">
             NoBSFlips / eBay Flip Scanner
           </div>
-
           <h1 className="mt-6 text-5xl font-black uppercase leading-[0.9] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
             Scan It.
             <span className="block text-purple-300">Know Instantly.</span>
           </h1>
-
           <p className="mx-auto mt-6 max-w-xl text-base leading-8 text-white/75 md:text-xl md:leading-9">
             Scan a barcode at the op shop. See real eBay sold prices from your local marketplace in your currency. Get a straight answer on whether it is worth flipping.
           </p>
-
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/scan"
-              className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500"
-            >
+            <Link href="/scan" className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500">
               Start Scanning
             </Link>
-            <Link
-              href="/fliplog"
-              className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/[0.08]"
-            >
+            <Link href="/fliplog" className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/[0.08]">
               See Real Flips
             </Link>
           </div>
@@ -71,13 +61,11 @@ export default function HomePage() {
             <div className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-green-300/70">Buy It</div>
             <p className="mt-3 text-sm leading-6 text-white/60">Sold prices are strong. Margin is there. Grab it.</p>
           </div>
-
           <div className="rounded-[2rem] border border-yellow-500/25 bg-yellow-500/10 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
             <div className="text-3xl font-black text-yellow-400">MAYBE</div>
             <div className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-yellow-300/70">Depends on Price</div>
             <p className="mt-3 text-sm leading-6 text-white/60">Could work if you get it cheap enough. Check the number.</p>
           </div>
-
           <div className="rounded-[2rem] border border-red-500/25 bg-red-500/10 p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
             <div className="text-3xl font-black text-red-400">HELL NO</div>
             <div className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-red-300/70">Walk Away</div>
@@ -106,7 +94,6 @@ export default function HomePage() {
             <SocialLink href="https://discord.gg/bvThRRf9Y5" label="Discord"><DiscordIcon /></SocialLink>
           </div>
         </div>
-
       </section>
     </main>
   );
@@ -126,12 +113,7 @@ function Step({ num, title, body }: { num: string; title: string; body: string }
 
 function SocialLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   return (
-    
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="flex h-20 w-24 flex-col items-center justify-center gap-2 rounded-2xl border border-purple-400/35 bg-purple-500/10 text-white transition hover:border-purple-300/60 hover:bg-purple-500/20"
-    >
+    <a href={href} target="_blank" rel="noreferrer" className="flex h-20 w-24 flex-col items-center justify-center gap-2 rounded-2xl border border-purple-400/35 bg-purple-500/10 text-white transition hover:border-purple-300/60 hover:bg-purple-500/20">
       {children}
       <span className="text-[9px] font-black uppercase tracking-[0.14em] text-purple-300/80">{label}</span>
     </a>

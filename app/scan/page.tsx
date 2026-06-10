@@ -157,18 +157,18 @@ export default function ScanPage() {
               min="0"
               className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/35 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30 transition"
             />
-            <div className="grid grid-cols-2 gap-3 md:contents">
+            <div className="flex gap-3 md:contents">
               <button
                 onClick={startScanner}
                 disabled={scannerOpen || scannerLoading}
-                className="rounded-2xl border border-purple-400/40 bg-purple-500/15 px-6 py-3 font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                className="md:hidden flex-1 rounded-2xl border border-purple-400/40 bg-purple-500/15 px-6 py-3 font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {scannerLoading ? "Opening..." : "Scan"}
               </button>
               <button
                 onClick={() => checkItem()}
                 disabled={loading || !barcode.trim()}
-                className="rounded-2xl bg-purple-600 px-8 py-3 font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-purple-600 px-8 py-3 font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Checking..." : "Check"}
               </button>

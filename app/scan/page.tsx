@@ -208,8 +208,8 @@ export default function ScanPage() {
               <h3 className="mb-3 text-base font-black uppercase tracking-tight">Sold Listings</h3>
               <div className="space-y-2 lg:max-h-[600px] lg:overflow-y-auto lg:pr-1">
                 {result.items.map((item, index) => (
-                  
-                    key={item.url + index}
+                  <a
+                    key={String(index)}
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"

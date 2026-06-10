@@ -30,10 +30,16 @@ export default function HomePage() {
               Scan a barcode at the op shop. See real eBay sold prices from your local marketplace in your currency. Get a straight answer on whether it is worth flipping.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/scan" className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500">
+              <Link
+                href="/scan"
+                className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500"
+              >
                 Start Scanning
               </Link>
-              <Link href="/login" className="flex items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25">
+              <Link
+                href="/login"
+                className="flex items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25"
+              >
                 Create Free Account
               </Link>
             </div>
@@ -78,11 +84,16 @@ export default function HomePage() {
             <div>
               <h2 className="text-xl font-black uppercase text-white md:text-2xl">Join the Discord</h2>
               <p className="mt-1 max-w-md text-sm leading-6 text-white/60">
-                Share your finds, ask questions, and connect with other flippers. No guru BS — just real people flipping real stuff.
+                Share your finds, ask questions, and connect with other flippers. No guru BS. Just real people flipping real stuff.
               </p>
             </div>
           </div>
-          <a href="https://discord.gg/bvThRRf9Y5" target="_blank" rel="noreferrer" className="mt-6 inline-flex shrink-0 items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0">
+          <a
+            href="https://discord.gg/bvThRRf9Y5"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 inline-flex shrink-0 items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/15 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-purple-300 transition hover:bg-purple-500/25 lg:mt-0"
+          >
             Join Now
           </a>
         </div>

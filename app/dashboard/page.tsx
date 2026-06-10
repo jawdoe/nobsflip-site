@@ -10,6 +10,7 @@ type FlipPost = {
   status: string | null;
   buy_price: number | null;
   sell_price: number | null;
+  image_url: string | null;
   created_at: string;
 };
 
@@ -79,7 +80,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,created_at").order("created_at", { ascending: false }),
+      supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,image_url,created_at").order("created_at", { ascending: false }),
       supabase.from("scans").select("*").order("created_at", { ascending: false }).limit(50),
     ]).then(([flipsRes, scansRes]) => {
       setFlips((flipsRes.data as FlipPost[]) ?? []);
@@ -97,9 +98,10 @@ export default function DashboardPage() {
   const boughtCount = flips.filter((f) => f.status === "bought").length;
   const listedCount = flips.filter((f) => f.status === "listed").length;
   const soldCount = soldFlips.length;
-  const avgDays = soldFlips.length > 0
-    ? Math.round(soldFlips.reduce((s, f) => s + Math.floor((Date.now() - new Date(f.created_at).getTime()) / 86400000), 0) / soldFlips.length)
-    : null;
+  const avgDays =
+    soldFlips.length > 0
+      ? Math.round(soldFlips.reduce((s, f) => s + Math.floor((Date.now() - new Date(f.created_at).getTime()) / 86400000), 0) / soldFlips.length)
+      : null;
 
   const filteredFlips = activeTab === "all" ? flips : flips.filter((f) => f.status === activeTab);
 
@@ -156,8 +158,11 @@ export default function DashboardPage() {
               </div>
               <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
                 {(["all", "bought", "listed", "sold"] as const).map((tab) => (
-                  <button key={tab} onClick={() => setActiveTab(tab)}
-                    className={"shrink-0 rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] transition " + (activeTab === tab ? "border border-purple-400/40 bg-purple-500/20 text-purple-200" : "border border-white/10 text-white/40 hover:text-white")}>
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={"shrink-0 rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] transition " + (activeTab === tab ? "border border-purple-400/40 bg-purple-500/20 text-purple-200" : "border border-white/10 text-white/40 hover:text-white")}
+                  >
                     {tab}
                   </button>
                 ))}
@@ -171,16 +176,26 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   {filteredFlips.map((flip) => {
                     const sc = statusConfig[flip.status ?? ""] ?? { color: "text-white/40", label: flip.status ?? "Unknown" };
-                    const profit = flip.status === "sold" && flip.sell_price != null && flip.buy_price != null ? flip.sell_price - flip.buy_price : null;
+                    const profit =
+                      flip.status === "sold" && flip.sell_price != null && flip.buy_price != null
+                        ? flip.sell_price - flip.buy_price
+                        : null;
                     return (
                       <div key={flip.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          {flip.image_url && (
+                            <img src={flip.image_url} alt={flip.title ?? ""} className="h-12 w-12 shrink-0 rounded-xl object-cover border border-white/10" />
+                          )}
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-black text-white">{flip.title ?? "Untitled"}</p>
                             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/40">
                               <span>Paid {formatMoney(flip.buy_price)}</span>
                               {flip.status === "sold" && <span>Sold {formatMoney(flip.sell_price)}</span>}
-                              {profit !== null && <span className={profit >= 0 ? "text-green-400" : "text-red-400"}>{profit >= 0 ? "+" : ""}{formatMoney(profit)} profit</span>}
+                              {profit !== null && (
+                                <span className={profit >= 0 ? "text-green-400" : "text-red-400"}>
+                                  {profit >= 0 ? "+" : ""}{formatMoney(profit)} profit
+                                </span>
+                              )}
                               <span>{daysAgo(flip.created_at)} ago &middot; {formatDate(flip.created_at)}</span>
                             </div>
                           </div>
@@ -234,7 +249,9 @@ export default function DashboardPage() {
                                 {scan.barcode && <span>#{scan.barcode}</span>}
                                 <span>Paid {formatMoney(scan.buy_price)}</span>
                                 <span>Median {formatMoney(scan.median_price)}</span>
-                                <span className={scan.estimated_profit > 0 ? "text-purple-300" : ""}>Profit {formatMoney(scan.estimated_profit)}</span>
+                                <span className={scan.estimated_profit > 0 ? "text-purple-300" : ""}>
+                                  Profit {formatMoney(scan.estimated_profit)}
+                                </span>
                                 <span>ROI {scan.roi.toFixed(0)}%</span>
                                 <span>{formatDate(scan.created_at)}</span>
                               </div>

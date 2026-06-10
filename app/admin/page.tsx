@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export default function AdminPage() {
+  const supabase = createSupabaseBrowserClient();
   const [image, setImage] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -39,6 +40,9 @@ export default function AdminPage() {
     setMessage("");
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setMessage("Not signed in."); setLoading(false); return; }
+
       let imageUrl: string | null = null;
 
       if (image) {
@@ -51,6 +55,7 @@ export default function AdminPage() {
       }
 
       const { error } = await supabase.from("flip_posts").insert([{
+        user_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
         status: status || null,

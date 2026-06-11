@@ -2,7 +2,7 @@
   "name": "NoBSFlips",
   "short_name": "NoBSFlips",
   "description": "Barcode scanner and flip tracker for eBay resellers",
-  "start_url": "/scan",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0d0b16",
   "theme_color": "#7c3aed",

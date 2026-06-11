@@ -39,8 +39,8 @@ function ScanButton({ active }: { active: boolean }) {
   return (
     <Link href="/scan" className="relative flex flex-1 flex-col items-center justify-end pb-2">
       <div className={
-        "absolute -top-6 flex h-16 w-16 flex-col items-center justify-center rounded-full shadow-xl transition-all " +
-        (active ? "bg-purple-500 shadow-purple-500/50 scale-105" : "bg-purple-600 shadow-purple-600/40")
+        "absolute -top-6 flex h-16 w-16 flex-col items-center justify-center rounded-full shadow-lg transition-all " +
+        (active ? "bg-purple-500 shadow-purple-500/25 scale-105" : "bg-purple-600 shadow-purple-600/20")
       }>
         <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="h-6 w-6 text-white">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
@@ -102,7 +102,7 @@ export default function MobileBottomNav() {
         <ScanButton active={scanActive} />
         <NavItem href="/pricing" label="Upgrade" active={pathname.startsWith("/pricing")}
           icon={<Icon d={ICONS.upgrade} />} />
-        <NavItem href="/dashboard" label="Profile" active={false}
+        <NavItem href="/dashboard#account" label="Profile" active={pathname.startsWith("/dashboard") && false}
           icon={<Icon d={ICONS.me} />} />
       </div>
     </nav>

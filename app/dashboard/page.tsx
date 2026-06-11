@@ -233,7 +233,7 @@ export default function DashboardPage() {
 
 
             {/* Profile / Account */}
-            <section className="mt-10 border-t border-white/10 pt-8">
+            <section id="account" className="mt-10 border-t border-white/10 pt-8">
               <h2 className="mb-4 text-sm font-black uppercase tracking-tight text-white/70">Account</h2>
               <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 space-y-4">
                 {/* Email + plan badge */}

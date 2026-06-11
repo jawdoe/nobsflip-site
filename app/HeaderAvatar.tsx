@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export default function HeaderAvatar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initials, setInitials] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
+  const pathname = usePathname();
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -28,7 +30,7 @@ export default function HeaderAvatar() {
       if (!session?.user) { setAvatarUrl(null); setInitials(null); }
     });
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [pathname]);
 
   if (!initials) return null;
 

@@ -221,7 +221,7 @@ export default function DashboardPage() {
                           </div>
                           <div className="flex shrink-0 flex-col items-end gap-1.5">
                             <span className={"text-xs font-black uppercase " + sc.color}>{sc.label}</span>
-                            <Link href={"/admin/edit/" + flip.id} className="text-[10px] text-white/25 underline hover:text-white/50">Edit</Link>
+                            <Link href={"/admin/edit/" + flip.id} className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-white/60 transition hover:border-purple-400/40 hover:bg-purple-500/10 hover:text-purple-300">Edit →</Link>
                           </div>
                         </div>
                       </div>

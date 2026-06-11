@@ -102,7 +102,7 @@ export default function MobileBottomNav() {
         <ScanButton active={scanActive} />
         <NavItem href="/pricing" label="Upgrade" active={pathname.startsWith("/pricing")}
           icon={<Icon d={ICONS.upgrade} />} />
-        <NavItem href="/dashboard#account" label="Profile" active={pathname.startsWith("/dashboard") && false}
+        <NavItem href="/profile" label="Profile" active={pathname.startsWith("/dashboard") && false}
           icon={<Icon d={ICONS.me} />} />
       </div>
     </nav>

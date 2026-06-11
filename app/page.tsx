@@ -16,7 +16,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.12),transparent_34%)]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d0b16] via-[#0d0b16]/84 to-black/40" />
       </div>
-      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-20">
+      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-36 pt-8 sm:px-6 md:px-8 md:pb-24 md:pt-20">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-12">
           <div>
             <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-purple-300 md:px-4 md:py-2 md:text-xs">

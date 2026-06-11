@@ -9,7 +9,7 @@ function LoginForm() {
   const redirectTo = searchParams.get("redirectTo") ?? "/scan";
   const supabase = createSupabaseBrowserClient();
 
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,21 +19,28 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    setLoading(true); setError(""); setSuccess("");
+
+    if (mode === "forgot") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+      });
+      if (error) setError(error.message);
+      else setSuccess("Check your email for a reset link.");
+      setLoading(false);
+      return;
+    }
 
     if (mode === "login") {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setError(error.message); }
-      else if (data.session) { window.location.href = redirectTo; }
+      if (error) setError(error.message);
+      else if (data.session) window.location.href = redirectTo;
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) { setError(error.message); }
-      else if (data.session) { window.location.href = redirectTo; }
-      else { setSuccess("Check your email to confirm your account."); }
+      if (error) setError(error.message);
+      else if (data.session) window.location.href = redirectTo;
+      else setSuccess("Check your email to confirm your account.");
     }
-
     setLoading(false);
   }
 
@@ -44,66 +51,60 @@ function LoginForm() {
           NoBSFlips
         </div>
         <h1 className="mt-4 text-2xl font-black uppercase tracking-tight text-white">
-          {mode === "login" ? "Sign In" : "Create Account"}
+          {mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Reset Password"}
         </h1>
+        {mode === "forgot" && <p className="mt-1 text-sm text-white/40">We'll send you a reset link.</p>}
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-white/50">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email"
               placeholder="you@example.com"
-              className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/20 transition"
-            />
+              className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/20 transition" />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-white/50">Password</label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                placeholder="••••••••"
-                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 pr-12 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/20 transition"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60"
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
+          {mode !== "forgot" && (
+            <div>
+              <label className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-white/50">Password</label>
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+                  required autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="••••••••"
+                  className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 pr-12 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/20 transition" />
+                <button type="button" onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/60">
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              {mode === "login" && (
+                <button type="button" onClick={() => { setMode("forgot"); setError(""); setSuccess(""); }}
+                  className="mt-1.5 text-xs text-white/30 underline hover:text-white/50">
+                  Forgot password?
+                </button>
+              )}
             </div>
-          </div>
+          )}
 
           {error && <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
           {success && <div className="rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-300">{success}</div>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.1em] text-white shadow-[0_0_22px_rgba(147,51,234,0.28)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? "..." : mode === "login" ? "Sign In" : "Create Account"}
+          <button type="submit" disabled={loading}
+            className="w-full rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.1em] text-white shadow-[0_0_22px_rgba(147,51,234,0.28)] transition hover:bg-purple-500 disabled:opacity-50">
+            {loading ? "..." : mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link"}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setSuccess(""); }}
-            className="text-xs text-white/35 underline hover:text-white/60"
-          >
-            {mode === "login" ? "No account? Sign up" : "Already have an account? Sign in"}
-          </button>
+        <div className="mt-4 flex flex-col items-center gap-2">
+          {mode === "forgot" ? (
+            <button onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+              className="text-xs text-white/35 underline hover:text-white/60">← Back to sign in</button>
+          ) : (
+            <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setSuccess(""); }}
+              className="text-xs text-white/35 underline hover:text-white/60">
+              {mode === "login" ? "No account? Sign up free" : "Already have an account? Sign in"}
+            </button>
+          )}
         </div>
       </div>
     </div>

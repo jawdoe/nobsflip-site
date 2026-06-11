@@ -26,6 +26,7 @@ export default function PricingPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -39,14 +40,15 @@ export default function PricingPage() {
 
   async function handleUpgrade() {
     setCheckoutLoading(true);
+    setCheckoutError(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { window.location.href = "/login"; return; }
       const res = await fetch("/api/lemonsqueezy/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, email: user.email }) });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
-      else alert("Something went wrong. Please try again.");
-    } catch { alert("Something went wrong. Please try again."); }
+      else setCheckoutError("Something went wrong — try again in a tick.");
+    } catch { setCheckoutError("Something went wrong — try again in a tick."); }
     finally { setCheckoutLoading(false); }
   }
 
@@ -112,6 +114,11 @@ export default function PricingPage() {
                 className="mt-8 w-full rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_24px_rgba(147,51,234,0.4)] transition hover:bg-purple-500 disabled:opacity-60">
                 {checkoutLoading ? "On it..." : "Get Premium — Let's Go →"}
               </button>
+            )}
+            {checkoutError && (
+              <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-xs text-red-300">
+                {checkoutError}
+              </div>
             )}
             <p className="mt-3 text-center text-xs text-white/25">Cancel anytime. No lock-in, no dramas.</p>
           </div>

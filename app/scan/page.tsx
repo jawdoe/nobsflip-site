@@ -64,7 +64,6 @@ export default function ScanPage() {
   const [pendingBarcode, setPendingBarcode] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
-  const [saveStatus, setSaveStatus] = useState<"saved" | "failed" | null>(null);
   const [flipSave, setFlipSave] = useState<FlipSaveState>(null);
   const [flipId, setFlipId] = useState<string | null>(null);
   const [country, setCountry] = useState("AU");
@@ -77,7 +76,7 @@ export default function ScanPage() {
   const effectivePostage = postageMode === "buyer" ? "0" : (postageAmount || "0");
 
   async function runCheck(scannedBarcode: string, price: string, post: string) {
-    setStep("loading"); setError(""); setResult(null); setSaveStatus(null); setFlipSave(null); setFlipId(null);
+    setStep("loading"); setError(""); setResult(null); setFlipSave(null); setFlipId(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
       const { data: { user } } = await supabase.auth.getUser();
@@ -91,10 +90,9 @@ export default function ScanPage() {
       try {
         if (user) {
           const { error: insertError } = await supabase.from("scans").insert({ user_id: user.id, barcode: scannedBarcode || null, search_term: data.search, buy_price: data.buyPrice ?? 0, median_price: data.medianPrice ?? 0, estimated_profit: data.estimatedProfit ?? 0, roi: data.roi ?? 0, verdict: data.verdict, result_count: data.resultCount ?? 0, data_source: data.dataSource });
-          if (insertError) { console.error("Scan save error:", insertError); setSaveStatus("failed"); }
-          else setSaveStatus("saved");
-        } else setSaveStatus("failed");
-      } catch { setSaveStatus("failed"); }
+          if (insertError) { console.error("Scan save error:", insertError); }
+        }
+      } catch { /* scan save errors are non-fatal */ }
     } catch (err) { setError(err instanceof Error ? err.message : "Unknown error"); }
     finally { setStep("idle"); }
   }

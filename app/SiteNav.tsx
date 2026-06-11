@@ -10,6 +10,7 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/scan", label: "Scan" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/history", label: "History" },
   { href: "/pricing", label: "Pricing" },
 ];
 
@@ -82,7 +83,7 @@ export default function SiteNav() {
         <Link href="/login"
           className="ml-2 rounded-xl border border-purple-400/40 bg-purple-500/15 px-4 py-2 text-sm font-black uppercase tracking-[0.08em] text-purple-300 transition hover:bg-purple-500/25">
           Sign In
-        </Link>
+         </Link>
       )}
     </nav>
   );

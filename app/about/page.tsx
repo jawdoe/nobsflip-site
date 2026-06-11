@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "About — NoBSFlips",
+  description: "A fair dinkum public flipping journal. Real buys, real sales, real results — no gurus, no fake wins.",
+};
 
 const INTRO_VIDEO_URL = "";
 
@@ -163,21 +169,17 @@ export default function AboutPage() {
               </p>
 
               <div className="mt-5 grid grid-cols-3 gap-3">
-                <SocialLink
-                  href="https://youtube.com"
-                  label="YouTube"
-                  className="border-purple-400/35 bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.16)] hover:border-purple-300/60 hover:bg-purple-500/20"
-                >
+                <div className="flex h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/10 bg-white/[0.02] text-white/20">
                   <YouTubeIcon />
-                </SocialLink>
+                  <span className="text-[10px] font-black uppercase tracking-[0.12em]">YouTube</span>
+                  <span className="text-[9px] text-white/20">coming soon</span>
+                </div>
 
-                <SocialLink
-                  href="https://instagram.com"
-                  label="Instagram"
-                  className="border-purple-400/35 bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.16)] hover:border-purple-300/60 hover:bg-purple-500/20"
-                >
+                <div className="flex h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/10 bg-white/[0.02] text-white/20">
                   <InstagramIcon />
-                </SocialLink>
+                  <span className="text-[10px] font-black uppercase tracking-[0.12em]">Instagram</span>
+                  <span className="text-[9px] text-white/20">coming soon</span>
+                </div>
 
                 <SocialLink
                   href="https://discord.gg/bvThRRf9Y5"
@@ -239,6 +241,7 @@ function SocialLink({
   return (
     <a
       href={href}
+
       target="_blank"
       rel="noreferrer"
       className={`flex h-20 flex-col items-center justify-center rounded-2xl border text-white transition ${className}`}

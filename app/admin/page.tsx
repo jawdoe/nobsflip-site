@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { compressImage } from "@/lib/compress-image";
 
 export default function AdminPage() {
   const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
   const [image, setImage] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [buyPrice, setBuyPrice] = useState("");
@@ -19,6 +21,12 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) router.push("/login");
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -160,6 +160,7 @@ export default function ProfilePage() {
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
               placeholder="What do ya mates call ya?"
               className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
             />
@@ -183,9 +184,10 @@ export default function ProfilePage() {
           onClick={handleSignOut}
           className="w-full rounded-xl border border-white/10 py-3 text-xs font-black uppercase tracking-[0.1em] text-white/40 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-300"
         >
-          Chuck It — Sign Out
+          ChuckIt — Sign Out
         </button>
       </div>
     </main>
   );
 }
+

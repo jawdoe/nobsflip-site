@@ -72,7 +72,7 @@ export default function HistoryPage() {
             NoBSFlips / History
           </div>
           <h1 className="mt-3 text-3xl font-black uppercase tracking-tight md:text-4xl">Scan History</h1>
-          <p className="mt-1 text-sm text-white/50">Every item you have checked, saved automatically.</p>
+          <p className="mt-1 text-sm text-white/50">Every barcode ya've hit — all saved, no dramas.</p>
         </div>
 
         {!loading && scans.length > 0 && (
@@ -93,15 +93,15 @@ export default function HistoryPage() {
         )}
 
         {loading && (
-          <div className="py-20 text-center text-sm text-white/30">Loading...</div>
+          <div className="py-20 text-center text-sm text-white/30">Pulling ya scan history...</div>
         )}
 
         {!loading && scans.length === 0 && (
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] py-20 text-center">
-            <p className="text-lg font-black uppercase text-white/30">No scans yet</p>
-            <p className="mt-2 text-sm text-white/20">Head to the scanner and check your first item.</p>
+            <p className="text-lg font-black uppercase text-white/30">Sweet FA yet</p>
+            <p className="mt-2 text-sm text-white/20">Get out there and suss something out.</p>
             <Link href="/scan" className="mt-6 inline-flex rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.1em] text-white">
-              Go to Scanner
+              Hit the Scanner
             </Link>
           </div>
         )}

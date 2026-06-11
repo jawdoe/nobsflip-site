@@ -105,9 +105,6 @@ export default function DashboardPage() {
   const soldCost = soldFlips.reduce((s, f) => s + (f.buy_price ?? 0), 0);
   const netProfit = totalReturned - soldCost;
   const roi = soldCost > 0 ? (netProfit / soldCost) * 100 : 0;
-  const avgDays = soldFlips.length > 0
-    ? Math.round(soldFlips.reduce((s, f) => s + Math.floor((Date.now() - new Date(f.created_at).getTime()) / 86400000), 0) / soldFlips.length)
-    : null;
 
   const counts = {
     all: flips.length,

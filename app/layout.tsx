@@ -22,6 +22,20 @@ export const metadata: Metadata = {
     icon: "/icon-192.png",
     apple: "/icon-192.png",
   },
+  openGraph: {
+    title: "NoBSFlips — eBay Flip Scanner",
+    description: "Scan barcodes at the op shop and instantly know if it's worth flipping on eBay.",
+    url: "https://nobsflipin.com",
+    siteName: "NoBSFlips",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "NoBSFlips — Scan It. Know Instantly." }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NoBSFlips — eBay Flip Scanner",
+    description: "Scan barcodes at the op shop and instantly know if it's worth flipping on eBay.",
+    images: ["/opengraph-image"],
+  },
 };
 
 export const viewport: Viewport = {

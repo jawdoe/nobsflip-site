@@ -13,10 +13,10 @@ type SortMode =
   | "lowestBuy";
 
 function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-  }).format(value);
+  const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
+  const country = locale.split("-")[1] ?? "AU";
+  const map: Record<string, string> = { AU: "AUD", US: "USD", GB: "GBP", CA: "CAD", NZ: "NZD", DE: "EUR", FR: "EUR", IT: "EUR", ES: "EUR" };
+  return new Intl.NumberFormat(locale, { style: "currency", currency: map[country] ?? "USD" }).format(value);
 }
 
 function getProfit(flip: FlipItem) {
@@ -233,17 +233,17 @@ export default function FlipLogClient({
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           <HighlightCard
             label="Best Profit"
-            title={bestFlip?.title ?? "No sold flips yet"}
+            title={bestFlip?.title ?? "Nothing sold yet, mate"}
             value={bestFlip ? formatMoney(getProfit(bestFlip)) : "-"}
           />
           <HighlightCard
             label="Highest ROI"
-            title={highestROI?.title ?? "No sold flips yet"}
+            title={highestROI?.title ?? "Nothing sold yet, mate"}
             value={highestROI ? `${getROI(highestROI).toFixed(1)}%` : "-"}
           />
           <HighlightCard
             label="Worst Flip"
-            title={worstFlip?.title ?? "No sold flips yet"}
+            title={worstFlip?.title ?? "Nothing sold yet, mate"}
             value={worstFlip ? formatMoney(getProfit(worstFlip)) : "-"}
             warning
           />
@@ -252,7 +252,7 @@ export default function FlipLogClient({
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <Panel title="Profit by Category">
             {categoryStats.length === 0 ? (
-              <EmptyText>No sold category data yet.</EmptyText>
+              <EmptyText>Nothing sold by category yet — get flogging.</EmptyText>
             ) : (
               <div className="space-y-3">
                 {categoryStats.map((item) => (
@@ -269,7 +269,7 @@ export default function FlipLogClient({
 
           <Panel title="Monthly Sales">
             {monthlyStats.length === 0 ? (
-              <EmptyText>No monthly sales yet.</EmptyText>
+              <EmptyText>No monthly sales yet — keep at it.</EmptyText>
             ) : (
               <div className="space-y-3">
                 {monthlyStats.map((item) => (
@@ -461,10 +461,10 @@ export default function FlipLogClient({
         {flips.length === 0 && (
           <div className="mt-6 rounded-[2rem] border border-white/10 bg-black/70 p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.32)] backdrop-blur-md">
             <h2 className="text-3xl font-black uppercase tracking-tight text-white">
-              No flips found.
+              Bugger all here.
             </h2>
             <p className="mt-3 text-base text-white/60">
-              Nothing matches that filter.
+              Try a different filter — nothing matches that one.
             </p>
           </div>
         )}

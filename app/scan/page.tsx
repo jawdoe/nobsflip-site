@@ -9,7 +9,7 @@ type EbayResult = {
   buyPrice: number; postage: number; feeRate: number; resultCount: number;
   averagePrice: number; medianPrice: number; estimatedSalePrice: number;
   ebayFeeEstimate: number; estimatedProfit: number; roi: number;
-  lowPrice: number; highPrice: number; isPremium: boolean;
+  lowPrice: number; highPrice: number; isPremium: boolean; freeScansRemaining?: number | null;
   verdict: "BUY" | "MAYBE" | "SKIP";
   _debug?: { findingApiStatus: string; country: string; marketplace: string };
   items: { title: string; price: string; currency: string; condition: string; soldDate: string; url: string; }[];
@@ -64,6 +64,7 @@ export default function ScanPage() {
   const [pendingBarcode, setPendingBarcode] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
+  const [capReached, setCapReached] = useState<{ limit: number; used: number } | null>(null);
   const [flipSave, setFlipSave] = useState<FlipSaveState>(null);
   const [flipId, setFlipId] = useState<string | null>(null);
   const [country, setCountry] = useState("AU");
@@ -76,7 +77,7 @@ export default function ScanPage() {
   const effectivePostage = postageMode === "buyer" ? "0" : (postageAmount || "0");
 
   async function runCheck(scannedBarcode: string, price: string, post: string) {
-    setStep("loading"); setError(""); setResult(null); setFlipSave(null); setFlipId(null);
+    setStep("loading"); setError(""); setResult(null); setFlipSave(null); setFlipId(null); setCapReached(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
       const { data: { user } } = await supabase.auth.getUser();
@@ -85,6 +86,11 @@ export default function ScanPage() {
       const text = await response.text();
       let data: any;
       try { data = JSON.parse(text); } catch { throw new Error("Server error: " + text.slice(0, 150)); }
+      if (response.status === 429 && data.capReached) {
+        setCapReached({ limit: data.limit ?? 10, used: data.used ?? data.limit ?? 10 });
+        setStep("idle");
+        return;
+      }
       if (!response.ok) throw new Error(data.error ?? "Something went wrong");
       setResult(data);
       try {
@@ -293,6 +299,18 @@ export default function ScanPage() {
 
         {error && <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>}
 
+        {capReached && (
+          <div className="mt-4 rounded-[2rem] border border-purple-500/40 bg-purple-500/10 p-6 text-center shadow-[0_0_50px_rgba(147,51,234,0.15)]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">Whoa there, champ</p>
+            <h2 className="mt-2 text-2xl font-black">That&apos;s your {capReached.limit} free scans done for today.</h2>
+            <p className="mt-2 text-sm text-white/50">Have a kip and come back tomorrow — your free scans reset every day. Or go Premium for unlimited scans plus real sold prices.</p>
+            <a href="/pricing" className="mt-5 inline-block rounded-2xl bg-purple-600 px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_24px_rgba(147,51,234,0.4)] transition hover:bg-purple-500">
+              Go Premium — Unlimited Scans →
+            </a>
+            <p className="mt-3 text-xs text-white/25">$9/month. Cancel anytime, no dramas.</p>
+          </div>
+        )}
+
         {result && vc && (
           <div className="mt-4 space-y-3">
             {result.resolvedFrom && (
@@ -380,6 +398,13 @@ export default function ScanPage() {
                   Upgrade →
                 </a>
               </div>
+            )}
+            {!result.isPremium && typeof result.freeScansRemaining === "number" && (
+              <p className="text-center text-[11px] font-black uppercase tracking-[0.12em] text-white/30">
+                {result.freeScansRemaining > 0
+                  ? `${result.freeScansRemaining} free scan${result.freeScansRemaining === 1 ? "" : "s"} left today`
+                  : "That's your last free scan for today"}
+              </p>
             )}
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/40">
               Costs: buy {formatMoney(result.buyPrice)}

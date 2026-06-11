@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { isPremium } from "@/lib/premium";
 
 function getBasicAuthHeader() {
   const clientId = process.env.EBAY_CLIENT_ID;
@@ -17,6 +19,16 @@ function getBasicAuthHeader() {
 }
 
 export async function GET(request: NextRequest) {
+  // Connecting eBay is Premium-only — verify here too (defence in depth).
+  const authClient = await createSupabaseServerClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) {
+    return NextResponse.redirect(new URL("/login?redirectTo=/profile", request.url));
+  }
+  if (!(await isPremium(user.id))) {
+    return NextResponse.redirect(new URL("/pricing", request.url));
+  }
+
   const code = request.nextUrl.searchParams.get("code");
 
   if (!code) {

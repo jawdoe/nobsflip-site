@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isPremium } from "@/lib/premium";
+import { consumeScan } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -157,7 +157,19 @@ export async function GET(req: NextRequest) {
   const clientSecret = process.env.EBAY_CLIENT_SECRET;
   if (!clientId) return NextResponse.json({ error: "Missing EBAY_CLIENT_ID" }, { status: 500 });
 
-  const userIsPremium = userId ? await isPremium(userId) : false;
+  let userIsPremium = false;
+  let freeScansRemaining: number | null = null;
+  if (userId) {
+    const quota = await consumeScan(userId);
+    userIsPremium = quota.premium;
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { error: "Daily free scan limit reached", capReached: true, limit: quota.limit, used: quota.used },
+        { status: 429 }
+      );
+    }
+    if (!quota.premium && typeof quota.remaining === "number") freeScansRemaining = quota.remaining;
+  }
 
   let searchTerm = rawSearchTerm;
   let barcodeResolved = false;
@@ -232,6 +244,7 @@ export async function GET(req: NextRequest) {
       searchType: rawBarcode ? "BARCODE" : "QUERY",
       dataSource, warning,
       isPremium: userIsPremium,
+      freeScansRemaining,
       buyPrice: cleanNumber(buyPrice),
       postage: cleanNumber(postage),
       feeRate: cleanNumber(feeRate),

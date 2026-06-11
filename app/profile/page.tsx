@@ -16,6 +16,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadDone, setUploadDone] = useState(false);
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -40,14 +42,20 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     setUploadingAvatar(true);
-    const ext = file.name.split(".").pop();
+    setUploadError(null);
+    setUploadDone(false);
+    const ext = file.name.split(".").pop() ?? "jpg";
     const path = `avatars/${user.id}.${ext}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (!error) {
+    if (error) {
+      setUploadError("Upload failed: " + error.message);
+    } else {
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = urlData.publicUrl + "?t=" + Date.now();
       setAvatarUrl(url);
       await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      setUploadDone(true);
+      setTimeout(() => setUploadDone(false), 3000);
     }
     setUploadingAvatar(false);
   }
@@ -114,9 +122,11 @@ export default function ProfilePage() {
             </div>
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-          <p className="text-xs text-white/30">
-            {uploadingAvatar ? "Uploading..." : "Tap to change photo"}
-          </p>
+          {uploadError && <p className="text-xs text-red-400 text-center">{uploadError}</p>}
+          {uploadDone && <p className="text-xs text-green-400 text-center">Photo updated ✓</p>}
+          {!uploadError && !uploadDone && (
+            <p className="text-xs text-white/30">{uploadingAvatar ? "Uploading..." : "Tap to change photo"}</p>
+          )}
         </div>
 
         {/* Plan badge */}

@@ -180,8 +180,18 @@ export default function AdminPage() {
 
                 <div className="md:col-span-2">
                   <label className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-white/45">Photo</label>
-                  <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-[0.8rem] text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-black file:text-white hover:file:bg-purple-500" />
+                  <input id="photo-upload" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} className="hidden" />
+                  <label htmlFor="photo-upload" className="flex cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 transition hover:border-purple-400/40 hover:bg-purple-500/10">
+                    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="h-5 w-5 shrink-0 text-purple-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                    </svg>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-white/80">{image ? image.name : "Take photo or choose from library"}</p>
+                      {!image && <p className="text-xs text-white/30">Camera · Photos · Files</p>}
+                    </div>
+                    {image && <span className="ml-auto shrink-0 text-[10px] font-black uppercase text-green-400">Ready ✓</span>}
+                  </label>
                 </div>
               </div>
 

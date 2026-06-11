@@ -212,7 +212,7 @@ export default function ScanPage() {
         </div>
       )}
 
-      <div className="relative mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
+      <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-36 md:px-8 md:py-12 md:pb-12">
         <div className="mb-6">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">NoBSFlips / Scanner</div>
           <h1 className="mt-3 text-3xl font-black uppercase tracking-tight md:text-4xl">Barcode Flip Scanner</h1>

@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import SiteNav from "./SiteNav";
 import MobileBottomNav from "./MobileBottomNav";
+import HeaderAvatar from "./HeaderAvatar";
 
 const BRAND_NAME = "NOBSFLIPS";
 const BRAND_TAGLINE = "No Bullshit. Just Flips.";
@@ -51,6 +52,7 @@ export default function RootLayout({
                 <div className="text-xs font-semibold uppercase tracking-[0.24em] text-purple-300/80">{BRAND_TAGLINE}</div>
               </Link>
               <SiteNav />
+              <HeaderAvatar />
             </div>
           </header>
 

@@ -29,12 +29,12 @@ export default function OnboardingBanner() {
         </div>
 
         <h2 className="text-2xl font-black uppercase leading-tight text-white">
-          G'day legend —<br />
+          G'day champion —<br />
           <span className="text-purple-300">ya found the good stuff.</span>
         </h2>
 
         <p className="mt-3 text-sm leading-6 text-white/60">
-          Deadset simple. Point ya phone at a barcode at the op shop and find out in seconds if it's worth a crack on eBay.
+          True blue, no waffle. Point ya phone at a barcode at the op shop and find out in seconds if it's worth flogging on eBay.
         </p>
 
         <div className="mt-5 space-y-2">

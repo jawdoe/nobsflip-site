@@ -216,7 +216,7 @@ export default function ScanPage() {
         <div className="mb-6">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">NoBSFlips / Scanner</div>
           <h1 className="mt-3 text-3xl font-black uppercase tracking-tight md:text-4xl">Barcode Flip Scanner</h1>
-          <p className="mt-1 text-sm text-white/50">Point ya phone at a barcode, get a deadset answer. No BS, no waffle.</p>
+          <p className="mt-1 text-sm text-white/50">Point ya phone at a barcode, get a straight answer. Fair go, no waffle.</p>
         </div>
 
         <div className="md:hidden">
@@ -290,7 +290,7 @@ export default function ScanPage() {
               </div>
             ) : (
               <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-xs text-green-300">
-                <span className="font-black">Deadset sold data</span> — what punters actually paid, not what some bloke's hoping for.
+                <span className="font-black">True blue sold data</span> — what punters actually paid, not what some bloke's hoping for.
               </div>
             )}
 
@@ -315,7 +315,7 @@ export default function ScanPage() {
                   {flipSave === "saved" && (
                     <div className="flex flex-col items-center gap-2">
                       <div className="inline-flex items-center gap-2 rounded-2xl bg-green-500/20 px-4 py-2 text-sm font-black text-green-300">
-                        ✓ Ripper. Logged — now let's flog it.
+                        ✓ On ya. Logged — now let's flog it.
                       </div>
                       {flipId && (
                         <Link href={"/admin/edit/" + flipId} className="text-xs text-white/40 underline hover:text-white/60">

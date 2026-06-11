@@ -27,7 +27,7 @@ export default function HomePage() {
               <span className="block text-purple-300">Know Instantly.</span>
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-white/75 md:mt-6 md:text-lg md:leading-9">
-              Chuck ya phone at a barcode in the op shop. Get real eBay sold prices — not what people hope to get, what they actually got — and a deadset straight answer on whether it's worth your coin.
+              Chuck ya phone at a barcode in the op shop. Get real eBay sold prices — not what people hope to get, what they actually got — and a fair dinkum answer on whether it's worth your coin.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/scan" className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500">
@@ -61,7 +61,7 @@ export default function HomePage() {
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 md:mt-6 md:gap-4">
             <Step num="1" title="Scan the barcode" body="Point ya phone at the barcode on the shelf. Or type it in manually if ya don't trust the camera." />
             <Step num="2" title="See real sold prices" body="Actual eBay sales from your local marketplace — not what some bloke reckons it's worth, what people actually paid." />
-            <Step num="3" title="Get a straight answer" body="Chuck in what the shop's asking and get a deadset YES, MAYBE, or HELL NO. No fluff, no waffle." />
+            <Step num="3" title="Get a straight answer" body="Chuck in what the shop's asking and get a true blue YES, MAYBE, or HELL NO. No galah business, just the facts." />
           </div>
         </div>
         <div className="mt-8 rounded-[2rem] border border-purple-500/20 bg-purple-500/5 p-5 md:mt-16 md:p-8 lg:flex lg:items-center lg:justify-between lg:gap-12">
@@ -72,7 +72,7 @@ export default function HomePage() {
             <div>
               <h2 className="text-xl font-black uppercase text-white md:text-2xl">Join the Discord</h2>
               <p className="mt-1 max-w-md text-sm leading-6 text-white/60">
-                Have a yarn with other op shop legends. Share ya finds, suss out what's selling, and have a crack together. No courses, no gurus, just real blokes doing real flips.
+                Have a yarn with other op shop legends. Share ya finds, suss out what's selling, and give it a burl together. No courses, no gurus, just fair dinkum flippers doing real work.
               </p>
             </div>
           </div>

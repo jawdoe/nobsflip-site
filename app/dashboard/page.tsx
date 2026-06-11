@@ -29,45 +29,44 @@ type Scan = {
   created_at: string;
 };
 
+const STATUS_CYCLE: Record<string, string> = {
+  bought: "listed",
+  listed: "sold",
+  sold: "bought",
+};
+
+const statusConfig: Record<string, { color: string; bg: string; border: string; label: string }> = {
+  bought: { color: "text-blue-300",   bg: "bg-blue-500/15",   border: "border-blue-400/30",   label: "Bought" },
+  listed: { color: "text-yellow-300", bg: "bg-yellow-500/15", border: "border-yellow-400/30", label: "Listed" },
+  sold:   { color: "text-green-300",  bg: "bg-green-500/15",  border: "border-green-400/30",  label: "Sold ✓" },
+};
+
 const verdictConfig = {
-  BUY:   { border: "border-green-500/30",  bg: "bg-green-500/10",  text: "text-green-400",  label: "YES" },
+  BUY:   { border: "border-green-500/30",  bg: "bg-green-500/10",  text: "text-green-400",  label: "BUY" },
   MAYBE: { border: "border-yellow-500/30", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "MAYBE" },
-  SKIP:  { border: "border-red-500/30",    bg: "bg-red-500/10",    text: "text-red-400",    label: "HELL NO" },
+  SKIP:  { border: "border-red-500/30",    bg: "bg-red-500/10",    text: "text-red-400",    label: "SKIP" },
 };
 
-const statusConfig: Record<string, { color: string; label: string }> = {
-  bought: { color: "text-blue-400",   label: "Bought" },
-  listed: { color: "text-yellow-400", label: "Listed" },
-  sold:   { color: "text-green-400",  label: "Sold" },
-};
+const EBAY_FEE = 0.134;
 
-function formatMoney(value: number | null) {
-  if (value == null) return "???";
+function fmt(value: number | null) {
+  if (value == null) return "—";
   const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
   const country = locale.split("-")[1] ?? "AU";
-  const map: Record<string, string> = {
-    AU: "AUD", US: "USD", GB: "GBP", CA: "CAD", NZ: "NZD",
-    DE: "EUR", FR: "EUR", IT: "EUR", ES: "EUR",
-  };
+  const map: Record<string, string> = { AU: "AUD", US: "USD", GB: "GBP", CA: "CAD", NZ: "NZD", DE: "EUR", FR: "EUR", IT: "EUR", ES: "EUR" };
   return new Intl.NumberFormat(locale, { style: "currency", currency: map[country] ?? "USD" }).format(value);
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }
 
-function daysAgo(iso: string) {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "1 day";
-  return `${days} days`;
-}
-
-function StatCard({ label, value, highlight = false, negative = false }: { label: string; value: string; highlight?: boolean; negative?: boolean }) {
+function PlaceholderImg() {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-white/40">{label}</p>
-      <p className={"mt-1 text-lg font-black " + (negative ? "text-red-400" : highlight ? "text-purple-300" : "text-white")}>{value}</p>
+    <div className="h-14 w-14 shrink-0 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center">
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6 text-white/20">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 18h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v10.5a1.5 1.5 0 001.5 1.5z" />
+      </svg>
     </div>
   );
 }
@@ -77,12 +76,13 @@ export default function DashboardPage() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "bought" | "listed" | "sold">("all");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
     Promise.all([
       supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,actual_sell,image_url,created_at").order("created_at", { ascending: false }),
-      supabase.from("scans").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("scans").select("*").order("created_at", { ascending: false }).limit(30),
     ]).then(([flipsRes, scansRes]) => {
       setFlips((flipsRes.data as FlipPost[]) ?? []);
       setScans((scansRes.data as Scan[]) ?? []);
@@ -90,21 +90,31 @@ export default function DashboardPage() {
     });
   }, []);
 
+  async function cycleStatus(flip: FlipPost) {
+    const next = STATUS_CYCLE[flip.status ?? "bought"] ?? "listed";
+    setUpdatingId(flip.id);
+    await supabase.from("flip_posts").update({ status: next }).eq("id", flip.id);
+    setFlips((prev) => prev.map((f) => f.id === flip.id ? { ...f, status: next } : f));
+    setUpdatingId(null);
+  }
 
-  const EBAY_FEE = 0.134;
+  // Stats
   const totalInvested = flips.reduce((s, f) => s + (f.buy_price ?? 0), 0);
   const soldFlips = flips.filter((f) => f.status === "sold");
   const totalReturned = soldFlips.reduce((s, f) => { const sell = f.actual_sell ?? f.sell_price ?? 0; return s + sell - sell * EBAY_FEE; }, 0);
   const soldCost = soldFlips.reduce((s, f) => s + (f.buy_price ?? 0), 0);
   const netProfit = totalReturned - soldCost;
   const roi = soldCost > 0 ? (netProfit / soldCost) * 100 : 0;
-  const boughtCount = flips.filter((f) => f.status === "bought").length;
-  const listedCount = flips.filter((f) => f.status === "listed").length;
-  const soldCount = soldFlips.length;
-  const avgDays =
-    soldFlips.length > 0
-      ? Math.round(soldFlips.reduce((s, f) => s + Math.floor((Date.now() - new Date(f.created_at).getTime()) / 86400000), 0) / soldFlips.length)
-      : null;
+  const avgDays = soldFlips.length > 0
+    ? Math.round(soldFlips.reduce((s, f) => s + Math.floor((Date.now() - new Date(f.created_at).getTime()) / 86400000), 0) / soldFlips.length)
+    : null;
+
+  const counts = {
+    all: flips.length,
+    bought: flips.filter((f) => f.status === "bought").length,
+    listed: flips.filter((f) => f.status === "listed").length,
+    sold: soldFlips.length,
+  };
 
   const filteredFlips = activeTab === "all" ? flips : flips.filter((f) => f.status === activeTab);
 
@@ -113,99 +123,113 @@ export default function DashboardPage() {
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.10),transparent_40%)]" />
       </div>
-      <div className="relative mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
+
+      <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-36 md:px-8 md:py-12 md:pb-12">
+
+        {/* Header */}
         <div className="mb-6">
-          <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">
-            NoBSFlips / Dashboard
-          </div>
-          <h1 className="mt-3 text-3xl font-black uppercase tracking-tight md:text-4xl">Dashboard</h1>
-          <p className="mt-1 text-sm text-white/50">Your flip performance at a glance.</p>
+          <h1 className="text-3xl font-black uppercase tracking-tight md:text-4xl">Your Flips</h1>
+          <p className="mt-1 text-sm text-white/40">Track your op shop hustle.</p>
         </div>
 
         {loading ? (
           <div className="py-20 text-center text-sm text-white/30">Loading...</div>
         ) : (
           <>
-            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <StatCard label="Total Invested" value={formatMoney(totalInvested)} />
-              <StatCard label="Total Returned" value={formatMoney(totalReturned)} />
-              <StatCard label="Net Profit" value={formatMoney(netProfit)} highlight={netProfit > 0} negative={netProfit < 0} />
-              <StatCard label="ROI" value={roi > 0 ? roi.toFixed(1) + "%" : "???"} highlight={roi > 0} />
+            {/* Stats — single unified row */}
+            <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Invested</p>
+                <p className="mt-1 text-xl font-black text-white">{fmt(totalInvested)}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Returned</p>
+                <p className="mt-1 text-xl font-black text-white">{fmt(totalReturned)}</p>
+              </div>
+              <div className={"rounded-2xl border p-4 " + (netProfit > 0 ? "border-green-500/20 bg-green-500/[0.07]" : netProfit < 0 ? "border-red-500/20 bg-red-500/[0.07]" : "border-white/10 bg-white/[0.04]")}>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Profit</p>
+                <p className={"mt-1 text-xl font-black " + (netProfit > 0 ? "text-green-400" : netProfit < 0 ? "text-red-400" : "text-white")}>
+                  {netProfit !== 0 ? (netProfit > 0 ? "+" : "") + fmt(netProfit) : "—"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg flip time</p>
+                <p className="mt-1 text-xl font-black text-white">{avgDays !== null ? avgDays + "d" : "—"}</p>
+              </div>
             </div>
 
-            <div className={"mb-6 grid gap-2 " + (avgDays !== null ? "grid-cols-4" : "grid-cols-3")}>
-              <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-3 text-center">
-                <div className="text-2xl font-black text-blue-400">{boughtCount}</div>
-                <div className="text-[10px] font-black uppercase tracking-wide text-blue-300/60">Bought</div>
-              </div>
-              <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-center">
-                <div className="text-2xl font-black text-yellow-400">{listedCount}</div>
-                <div className="text-[10px] font-black uppercase tracking-wide text-yellow-300/60">Listed</div>
-              </div>
-              <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-center">
-                <div className="text-2xl font-black text-green-400">{soldCount}</div>
-                <div className="text-[10px] font-black uppercase tracking-wide text-green-300/60">Sold</div>
-              </div>
-              {avgDays !== null && (
-                <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 p-3 text-center">
-                  <div className="text-2xl font-black text-purple-400">{avgDays}d</div>
-                  <div className="text-[10px] font-black uppercase tracking-wide text-purple-300/60">Avg Days</div>
-                </div>
-              )}
-            </div>
-
+            {/* Flips section */}
             <section className="mb-8">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-black uppercase tracking-tight text-white/70">Flips</h2>
-                <Link href="/admin" className="text-xs font-black text-purple-400 underline">+ Add Flip</Link>
+                <h2 className="text-sm font-black uppercase tracking-tight text-white/60">Flips</h2>
+                <Link href="/admin" className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-purple-300 transition hover:bg-purple-500/20">
+                  + Add
+                </Link>
               </div>
+
+              {/* Tabs with counts */}
               <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
                 {(["all", "bought", "listed", "sold"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={"shrink-0 rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] transition " + (activeTab === tab ? "border border-purple-400/40 bg-purple-500/20 text-purple-200" : "border border-white/10 text-white/40 hover:text-white")}
-                  >
-                    {tab}
+                  <button key={tab} onClick={() => setActiveTab(tab)}
+                    className={"shrink-0 rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] transition " +
+                      (activeTab === tab ? "border border-purple-400/40 bg-purple-500/20 text-purple-200" : "border border-white/10 text-white/40 hover:text-white")}>
+                    {tab} {counts[tab] > 0 && <span className="ml-1 opacity-60">({counts[tab]})</span>}
                   </button>
                 ))}
               </div>
+
               {filteredFlips.length === 0 ? (
                 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] py-12 text-center">
-                  <p className="text-sm text-white/30">No flips here yet.</p>
-                  <Link href="/admin" className="mt-4 inline-flex rounded-2xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-white">Add flip</Link>
+                  <p className="text-sm text-white/30">Nothing here yet.</p>
+                  <Link href="/admin" className="mt-4 inline-flex rounded-2xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-white">
+                    Add your first flip
+                  </Link>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {filteredFlips.map((flip) => {
-                    const sc = statusConfig[flip.status ?? ""] ?? { color: "text-white/40", label: flip.status ?? "Unknown" };
+                    const sc = statusConfig[flip.status ?? "bought"] ?? statusConfig.bought;
                     const sellPrice = flip.actual_sell ?? flip.sell_price ?? 0;
-                    const profit =
-                      flip.status === "sold" && flip.buy_price != null && (flip.actual_sell ?? flip.sell_price) != null
-                        ? sellPrice - sellPrice * 0.134 - flip.buy_price
-                        : null;
+                    const profit = flip.status === "sold" && flip.buy_price != null && sellPrice > 0
+                      ? sellPrice - sellPrice * EBAY_FEE - flip.buy_price
+                      : null;
+
                     return (
-                      <div key={flip.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                        <div className="flex items-start gap-3">
-                          {flip.image_url && (
-                            <img src={flip.image_url} alt={flip.title ?? ""} className="h-12 w-12 shrink-0 rounded-xl object-cover border border-white/10" />
-                          )}
+                      <div key={flip.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                        <div className="flex items-center gap-3">
+                          {/* Image or placeholder */}
+                          {flip.image_url
+                            ? <img src={flip.image_url} alt={flip.title ?? ""} className="h-14 w-14 shrink-0 rounded-xl object-cover border border-white/10" />
+                            : <PlaceholderImg />
+                          }
+
+                          {/* Content */}
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-black text-white">{flip.title ?? "Untitled"}</p>
-                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/40">
-                              <span>Paid {formatMoney(flip.buy_price)}</span>
-                              {flip.status === "sold" && <span>Sold {formatMoney(flip.sell_price)}</span>}
+                            <p className="truncate font-black text-white text-sm">{flip.title ?? "Untitled"}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-white/40">
+                              <span>Paid {fmt(flip.buy_price)}</span>
                               {profit !== null && (
-                                <span className={profit >= 0 ? "text-green-400" : "text-red-400"}>
-                                  {profit >= 0 ? "+" : ""}{formatMoney(profit)} profit
+                                <span className={profit >= 0 ? "font-black text-green-400" : "font-black text-red-400"}>
+                                  {profit >= 0 ? "+" : ""}{fmt(profit)}
                                 </span>
                               )}
-                              <span>{daysAgo(flip.created_at)} ago &middot; {formatDate(flip.created_at)}</span>
+                              <span>{fmtDate(flip.created_at)}</span>
                             </div>
                           </div>
-                          <div className="flex shrink-0 flex-col items-end gap-1.5">
-                            <span className={"text-xs font-black uppercase " + sc.color}>{sc.label}</span>
-                            <Link href={"/admin/edit/" + flip.id} className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-white/60 transition hover:border-purple-400/40 hover:bg-purple-500/10 hover:text-purple-300">Edit →</Link>
+
+                          {/* Right side — tappable status + edit */}
+                          <div className="flex shrink-0 flex-col items-end gap-2">
+                            <button
+                              onClick={() => cycleStatus(flip)}
+                              disabled={updatingId === flip.id}
+                              title="Tap to change status"
+                              className={"rounded-lg border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide transition active:scale-95 " + sc.bg + " " + sc.border + " " + sc.color + (updatingId === flip.id ? " opacity-50" : " hover:brightness-125")}>
+                              {updatingId === flip.id ? "..." : sc.label}
+                            </button>
+                            <Link href={"/admin/edit/" + flip.id}
+                              className="text-[10px] font-black uppercase tracking-wide text-white/25 transition hover:text-purple-300">
+                              Edit →
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -215,59 +239,37 @@ export default function DashboardPage() {
               )}
             </section>
 
-
+            {/* Scan history — simplified */}
             <section>
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-black uppercase tracking-tight text-white/70">Scan History</h2>
-                <Link href="/scan" className="text-xs font-black text-purple-400 underline">New Scan</Link>
+                <h2 className="text-sm font-black uppercase tracking-tight text-white/60">Recent Scans</h2>
+                <Link href="/scan" className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-purple-300 transition hover:bg-purple-500/20">
+                  Scan
+                </Link>
               </div>
+
               {scans.length === 0 ? (
                 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] py-12 text-center">
                   <p className="text-sm text-white/30">No scans yet.</p>
-                  <Link href="/scan" className="mt-4 inline-flex rounded-2xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-white">Start scanning</Link>
+                  <Link href="/scan" className="mt-4 inline-flex rounded-2xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-white">
+                    Start scanning
+                  </Link>
                 </div>
               ) : (
-                <>
-                  <div className="mb-3 grid grid-cols-3 gap-2">
-                    <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-center">
-                      <div className="text-xl font-black text-green-400">{scans.filter((s) => s.verdict === "BUY").length}</div>
-                      <div className="text-[10px] font-black uppercase tracking-wide text-green-300/60">Yes</div>
-                    </div>
-                    <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-center">
-                      <div className="text-xl font-black text-yellow-400">{scans.filter((s) => s.verdict === "MAYBE").length}</div>
-                      <div className="text-[10px] font-black uppercase tracking-wide text-yellow-300/60">Maybe</div>
-                    </div>
-                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-center">
-                      <div className="text-xl font-black text-red-400">{scans.filter((s) => s.verdict === "SKIP").length}</div>
-                      <div className="text-[10px] font-black uppercase tracking-wide text-red-300/60">Hell No</div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {scans.map((scan) => {
-                      const vc = verdictConfig[scan.verdict];
-                      return (
-                        <div key={scan.id} className={"rounded-2xl border p-4 " + vc.border + " " + vc.bg}>
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate font-black text-white">{scan.search_term}</p>
-                              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/40">
-                                {scan.barcode && <span>#{scan.barcode}</span>}
-                                <span>Paid {formatMoney(scan.buy_price)}</span>
-                                <span>Median {formatMoney(scan.median_price)}</span>
-                                <span className={scan.estimated_profit > 0 ? "text-purple-300" : ""}>
-                                  Profit {formatMoney(scan.estimated_profit)}
-                                </span>
-                                <span>ROI {scan.roi.toFixed(0)}%</span>
-                                <span>{formatDate(scan.created_at)}</span>
-                              </div>
-                            </div>
-                            <div className={"shrink-0 text-sm font-black " + vc.text}>{vc.label}</div>
-                          </div>
+                <div className="space-y-2">
+                  {scans.map((scan) => {
+                    const vc = verdictConfig[scan.verdict];
+                    return (
+                      <div key={scan.id} className={"flex items-center gap-3 rounded-2xl border p-3 " + vc.border + " " + vc.bg}>
+                        <div className={"shrink-0 w-14 text-center text-xs font-black uppercase " + vc.text}>{vc.label}</div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-black text-white">{scan.search_term}</p>
+                          <p className="text-xs text-white/30">{fmtDate(scan.created_at)} · paid {fmt(scan.buy_price)} · profit {fmt(scan.estimated_profit)}</p>
                         </div>
-                      );
-                    })}
-                  </div>
-                </>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </section>
           </>

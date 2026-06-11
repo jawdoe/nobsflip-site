@@ -15,20 +15,6 @@ type FlipPost = {
   created_at: string;
 };
 
-type Scan = {
-  id: string;
-  barcode: string | null;
-  search_term: string;
-  buy_price: number;
-  median_price: number;
-  estimated_profit: number;
-  roi: number;
-  verdict: "BUY" | "MAYBE" | "SKIP";
-  result_count: number;
-  data_source: string;
-  created_at: string;
-};
-
 const STATUS_CYCLE: Record<string, string> = {
   bought: "listed",
   listed: "sold",
@@ -39,12 +25,6 @@ const statusConfig: Record<string, { color: string; bg: string; border: string; 
   bought: { color: "text-blue-300",   bg: "bg-blue-500/15",   border: "border-blue-400/30",   label: "Bought" },
   listed: { color: "text-yellow-300", bg: "bg-yellow-500/15", border: "border-yellow-400/30", label: "Listed" },
   sold:   { color: "text-green-300",  bg: "bg-green-500/15",  border: "border-green-400/30",  label: "Sold ✓" },
-};
-
-const verdictConfig = {
-  BUY:   { border: "border-green-500/30",  bg: "bg-green-500/10",  text: "text-green-400",  label: "BUY" },
-  MAYBE: { border: "border-yellow-500/30", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "MAYBE" },
-  SKIP:  { border: "border-red-500/30",    bg: "bg-red-500/10",    text: "text-red-400",    label: "SKIP" },
 };
 
 const EBAY_FEE = 0.134;
@@ -73,19 +53,14 @@ function PlaceholderImg() {
 
 export default function DashboardPage() {
   const [flips, setFlips] = useState<FlipPost[]>([]);
-  const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "bought" | "listed" | "sold">("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    Promise.all([
-      supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,actual_sell,image_url,created_at").order("created_at", { ascending: false }),
-      supabase.from("scans").select("*").order("created_at", { ascending: false }).limit(30),
-    ]).then(([flipsRes, scansRes]) => {
-      setFlips((flipsRes.data as FlipPost[]) ?? []);
-      setScans((scansRes.data as Scan[]) ?? []);
+    supabase.from("flip_posts").select("id,title,status,buy_price,sell_price,actual_sell,image_url,created_at").order("created_at", { ascending: false }).then((res) => {
+      setFlips((res.data as FlipPost[]) ?? []);
       setLoading(false);
     });
   }, []);
@@ -236,39 +211,16 @@ export default function DashboardPage() {
               )}
             </section>
 
-            {/* Scan history — simplified */}
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-black uppercase tracking-tight text-white/60">Recent Scans</h2>
-                <Link href="/scan" className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-purple-300 transition hover:bg-purple-500/20">
-                  Scan
-                </Link>
+            {/* Scan history link */}
+            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4">
+              <div>
+                <p className="text-sm font-black text-white/60">Scan History</p>
+                <p className="text-xs text-white/30">Every barcode ya've hit</p>
               </div>
-
-              {scans.length === 0 ? (
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] py-12 text-center">
-                  <p className="text-sm text-white/30">Haven't scanned a bloody thing yet. What are ya waiting for?</p>
-                  <Link href="/scan" className="mt-4 inline-flex rounded-2xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-white">
-                    Go suss something out
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {scans.map((scan) => {
-                    const vc = verdictConfig[scan.verdict];
-                    return (
-                      <div key={scan.id} className={"flex items-center gap-3 rounded-2xl border p-3 " + vc.border + " " + vc.bg}>
-                        <div className={"shrink-0 w-14 text-center text-xs font-black uppercase " + vc.text}>{vc.label}</div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-black text-white">{scan.search_term}</p>
-                          <p className="text-xs text-white/30">{fmtDate(scan.created_at)} · paid {fmt(scan.buy_price)} · profit {fmt(scan.estimated_profit)}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                     </div>
-              )}
-            </section>
+              <Link href="/history" className="rounded-lg border border-purple-400/30 bg-purple-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-purple-300 transition hover:bg-purple-500/20">
+                View All →
+              </Link>
+            </div>
           </>
         )}
       </div>

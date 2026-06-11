@@ -165,8 +165,8 @@ export default function ScanPage() {
       {step === "price" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-white">Before we scan</h2>
-            <p className="mt-1 text-sm text-white/50">What's on the price tag? And who's covering postage?</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">Quick one first</h2>
+            <p className="mt-1 text-sm text-white/50">What's the op shop charging for it? And who's covering postage?</p>
 
             <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Store price</label>
             <input autoFocus type="number" min="0" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} onKeyDown={(e) => e.key === "Enter" && startCamera()} placeholder="0.00"
@@ -184,11 +184,11 @@ export default function ScanPage() {
               </button>
             </div>
 
-            {postageMode === "buyer" && <p className="mt-2 text-xs text-white/30">Nice — buyer pays postage, nothing comes off your profit.</p>}
+            {postageMode === "buyer" && <p className="mt-2 text-xs text-white/30">Beauty — buyer sorts postage, nothing comes off ya profit.</p>}
 
             {postageMode === "free" && (
               <div className="mt-3">
-                <p className="mb-2 text-xs text-white/30">Pick your satchel — we'll take it off your profit:</p>
+                <p className="mb-2 text-xs text-white/30">Pick ya satchel size — comes off ya profit:</p>
                 <div className="flex flex-wrap gap-2">
                   {satchelOptions.map((opt) => (
                     <button key={opt.value} type="button" onClick={() => setPostageAmount(opt.value)}
@@ -207,7 +207,7 @@ export default function ScanPage() {
               <button onClick={() => setStep("idle")} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">Cancel</button>
               <button onClick={startCamera} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">Scan Barcode</button>
             </div>
-            <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">No barcode? Type it in manually</button>
+            <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">Can't scan it? Chuck the barcode in manually</button>
           </div>
         </div>
       )}
@@ -216,7 +216,7 @@ export default function ScanPage() {
         <div className="mb-6">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">NoBSFlips / Scanner</div>
           <h1 className="mt-3 text-3xl font-black uppercase tracking-tight md:text-4xl">Barcode Flip Scanner</h1>
-          <p className="mt-1 text-sm text-white/50">Point it at a barcode. Get a straight answer. No BS.</p>
+          <p className="mt-1 text-sm text-white/50">Point ya phone at a barcode, get a deadset answer. No BS, no waffle.</p>
         </div>
 
         <div className="md:hidden">
@@ -286,16 +286,16 @@ export default function ScanPage() {
             )}
             {result.dataSource === "EBAY_BROWSE_ACTIVE" ? (
               <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs leading-5 text-yellow-300">
-                <span className="font-black">Fair warning:</span> These are active listings, not sold prices. People can ask whatever they want — take this with a grain of salt.
+                <span className="font-black">Heads up:</span> These are active listings, not sold prices. Anyone can ask whatever they reckon — take it with a grain of salt.
               </div>
             ) : (
               <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-xs text-green-300">
-                <span className="font-black">Real sold data</span> — what people actually paid, not what they hope to get.
+                <span className="font-black">Deadset sold data</span> — what punters actually paid, not what some bloke's hoping for.
               </div>
             )}
 
             <div className={"w-full rounded-[2rem] border p-6 text-center " + vc.border + " " + vc.bg}>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">NoBSFlips Says</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">NoBSFlips Reckons</p>
               <h2 className={"mt-2 text-4xl font-black sm:text-5xl " + vc.text}>{vc.label}</h2>
               <p className="mt-2 text-xs text-white/50">{result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Current listings" : "Sold listings"} — {result.resultCount} results</p>
 
@@ -304,7 +304,7 @@ export default function ScanPage() {
                   {flipSave === null && (
                     <button onClick={handleBoughtThis}
                       className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-lg transition hover:bg-white/90 active:scale-[0.97]">
-                      Bought it — log the flip
+                      Yeah nah — I grabbed it
                     </button>
                   )}
                   {flipSave === "saving" && (
@@ -315,7 +315,7 @@ export default function ScanPage() {
                   {flipSave === "saved" && (
                     <div className="flex flex-col items-center gap-2">
                       <div className="inline-flex items-center gap-2 rounded-2xl bg-green-500/20 px-4 py-2 text-sm font-black text-green-300">
-                        ✓ Flip logged. Let's get it sold.
+                        ✓ Ripper. Logged — now let's flog it.
                       </div>
                       {flipId && (
                         <Link href={"/admin/edit/" + flipId} className="text-xs text-white/40 underline hover:text-white/60">
@@ -326,8 +326,8 @@ export default function ScanPage() {
                   )}
                   {flipSave === "failed" && (
                     <div className="flex flex-col items-center gap-2">
-                      <div className="text-xs text-red-400">Couldn't save that — are you signed in?</div>
-                      <button onClick={handleBoughtThis} className="text-xs text-white/40 underline">Try again</button>
+                      <div className="text-xs text-red-400">No good — ya signed in, mate?</div>
+                      <button onClick={handleBoughtThis} className="text-xs text-white/40 underline">Have another crack</button>
                     </div>
                   )}
                 </div>
@@ -394,7 +394,7 @@ export default function ScanPage() {
 
             <button onClick={() => setStep("price")}
               className="w-full rounded-2xl border border-white/10 py-4 text-sm font-black uppercase tracking-[0.08em] text-white/50 transition hover:border-purple-400/30 hover:text-white">
-              Scan Another One
+              Chuck Another One At Me
             </button>
           </div>
         )}

@@ -26,7 +26,7 @@ function LoginForm() {
         redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
       });
       if (error) setError(error.message);
-      else setSuccess("Done — check your email for a reset link.");
+      else setSuccess("Done — check ya inbox for the reset link.");
       setLoading(false);
       return;
     }
@@ -39,7 +39,7 @@ function LoginForm() {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) setError(error.message);
       else if (data.session) window.location.href = redirectTo;
-      else setSuccess("Almost there — check your email to confirm your account.");
+      else setSuccess("Nearly there — check ya inbox to confirm ya account.");
     }
     setLoading(false);
   }
@@ -53,7 +53,7 @@ function LoginForm() {
         <h1 className="mt-4 text-2xl font-black uppercase tracking-tight text-white">
           {mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Reset Password"}
         </h1>
-        {mode === "forgot" && <p className="mt-1 text-sm text-white/40">No drama — we'll send a reset link to your email.</p>}
+        {mode === "forgot" && <p className="mt-1 text-sm text-white/40">No dramas — we'll shoot ya a reset link.</p>}
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl">
@@ -102,7 +102,7 @@ function LoginForm() {
           ) : (
             <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setSuccess(""); }}
               className="text-xs text-white/35 underline hover:text-white/60">
-              {mode === "login" ? "No account yet? Sign up free" : "Already got an account? Sign in"}
+              {mode === "login" ? "No account? She's free, chuck one in" : "Already got one? Sign in here"}
             </button>
           )}
         </div>

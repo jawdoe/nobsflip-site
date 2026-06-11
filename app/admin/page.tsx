@@ -77,7 +77,7 @@ export default function AdminPage() {
       <div className="relative mx-auto max-w-lg px-4 pt-8 pb-36 md:pb-12">
         <div className="mb-6">
           <h1 className="text-3xl font-black uppercase tracking-tight">Log a Flip</h1>
-          <p className="mt-1 text-sm text-white/40">Got something good? Chuck it in.</p>
+          <p className="mt-1 text-sm text-white/40">Snagged something ripper? Chuck it in.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -89,7 +89,7 @@ export default function AdminPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              placeholder="PS3 Controller, Nike Air Max, etc."
+              placeholder="PS3 controller, Nike Air Max, old Victa mower..."
               className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none placeholder:text-white/25 focus:border-purple-400/50 focus:ring-1 focus:ring-purple-500/20 transition"
             />
           </div>

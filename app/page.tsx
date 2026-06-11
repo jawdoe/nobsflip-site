@@ -27,7 +27,7 @@ export default function HomePage() {
               <span className="block text-purple-300">Know Instantly.</span>
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-white/75 md:mt-6 md:text-lg md:leading-9">
-              Point your phone at a barcode in the op shop. Get real eBay sold prices — not asking prices, actual sales — and a straight answer on whether it's worth your coin.
+              Chuck ya phone at a barcode in the op shop. Get real eBay sold prices — not what people hope to get, what they actually got — and a deadset straight answer on whether it's worth your coin.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/scan" className="flex items-center justify-center rounded-2xl bg-purple-600 px-8 py-3 text-sm font-black uppercase tracking-[0.14em] text-white shadow-[0_0_28px_rgba(147,51,234,0.4)] transition hover:scale-[1.02] hover:bg-purple-500">
@@ -42,26 +42,26 @@ export default function HomePage() {
             <div className="rounded-2xl border border-green-500/25 bg-green-500/10 p-3 lg:rounded-[2rem] lg:p-6">
               <div className="text-lg font-black text-green-400 lg:text-3xl">YES</div>
               <div className="text-[10px] font-black uppercase tracking-[0.14em] text-green-300/70 lg:mt-1 lg:text-xs">Buy It</div>
-              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Sold prices are strong, margin's there. Chuck it in the basket, legend.</p>
+              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Ripper. Sold prices are strong, margin's there. In the basket it goes, legend.</p>
             </div>
             <div className="rounded-2xl border border-yellow-500/25 bg-yellow-500/10 p-3 lg:rounded-[2rem] lg:p-6">
               <div className="text-lg font-black text-yellow-400 lg:text-3xl">MAYBE</div>
               <div className="text-[10px] font-black uppercase tracking-[0.14em] text-yellow-300/70 lg:mt-1 lg:text-xs">Could do</div>
-              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Numbers are borderline. Haggle the price down and you might be onto something.</p>
+              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">She's borderline. Have a crack at haggling the price down and ya might be onto something.</p>
             </div>
             <div className="rounded-2xl border border-red-500/25 bg-red-500/10 p-3 lg:rounded-[2rem] lg:p-6">
               <div className="text-base font-black text-red-400 lg:text-3xl">HELL NO</div>
               <div className="text-[10px] font-black uppercase tracking-[0.14em] text-red-300/70 lg:mt-1 lg:text-xs">Walk Away</div>
-              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Don't touch it. Put it down. Walk away and thank me later.</p>
+              <p className="mt-1 hidden text-sm leading-6 text-white/60 lg:block">Nah mate. Put it back. Walk away. Not every op shop find is a winner.</p>
             </div>
           </div>
         </div>
         <div className="mt-12 md:mt-20">
           <p className="text-center text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">How It Works</p>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 md:mt-6 md:gap-4">
-            <Step num="1" title="Scan the barcode" body="Point your camera at the barcode on the shelf. Or type it in manually if you're old school." />
-            <Step num="2" title="See real sold prices" body="Actual completed eBay sales from your local marketplace. Not hopeful asking prices — what people actually paid." />
-            <Step num="3" title="Get a straight answer" body="Enter what you'd pay for it and get a YES, MAYBE, or HELL NO. No fluff, no guessing." />
+            <Step num="1" title="Scan the barcode" body="Point ya phone at the barcode on the shelf. Or type it in manually if ya don't trust the camera." />
+            <Step num="2" title="See real sold prices" body="Actual eBay sales from your local marketplace — not what some bloke reckons it's worth, what people actually paid." />
+            <Step num="3" title="Get a straight answer" body="Chuck in what the shop's asking and get a deadset YES, MAYBE, or HELL NO. No fluff, no waffle." />
           </div>
         </div>
         <div className="mt-8 rounded-[2rem] border border-purple-500/20 bg-purple-500/5 p-5 md:mt-16 md:p-8 lg:flex lg:items-center lg:justify-between lg:gap-12">
@@ -72,7 +72,7 @@ export default function HomePage() {
             <div>
               <h2 className="text-xl font-black uppercase text-white md:text-2xl">Join the Discord</h2>
               <p className="mt-1 max-w-md text-sm leading-6 text-white/60">
-                Swap finds, talk strategy, and hang with other op shop hustlers. No gurus, no courses, no BS. Just legends doing actual flips.
+                Have a yarn with other op shop legends. Share ya finds, suss out what's selling, and have a crack together. No courses, no gurus, just real blokes doing real flips.
               </p>
             </div>
           </div>

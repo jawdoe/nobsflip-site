@@ -76,14 +76,14 @@ export default function AdminPage() {
 
       <div className="relative mx-auto max-w-lg px-4 pt-8 pb-36 md:pb-12">
         <div className="mb-6">
-          <h1 className="text-3xl font-black uppercase tracking-tight">Add a Flip</h1>
-          <p className="mt-1 text-sm text-white/40">Log what you just picked up.</p>
+          <h1 className="text-3xl font-black uppercase tracking-tight">Log a Flip</h1>
+          <p className="mt-1 text-sm text-white/40">Got something good? Chuck it in.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Core fields */}
           <div>
-            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-white/40">What is it?</label>
+            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-white/40">What did you grab?</label>
             <input
               type="text"
               value={title}
@@ -138,7 +138,7 @@ export default function AdminPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
               </svg>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-black text-white/70">{image ? image.name : "Take photo or choose from library"}</p>
+                <p className="text-sm font-black text-white/70">{image ? image.name : "Add a photo"}</p>
                 {!image && <p className="text-xs text-white/30">Camera · Photos · Files</p>}
               </div>
               {image && <span className="shrink-0 text-[10px] font-black uppercase text-green-400">Ready ✓</span>}
@@ -148,7 +148,7 @@ export default function AdminPage() {
           {/* More details toggle */}
           <button type="button" onClick={() => setShowMore((v) => !v)}
             className="flex w-full items-center justify-between rounded-2xl border border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wide text-white/40 transition hover:text-white/60">
-            <span>{showMore ? "Hide extra details" : "Add more details"}</span>
+            <span>{showMore ? "Hide extra details" : "Add more info (optional)"}</span>
             <svg viewBox="0 0 24 24" fill="none" strokeWidth={2.5} stroke="currentColor" className={"h-4 w-4 transition-transform " + (showMore ? "rotate-180" : "")}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
             </svg>
@@ -182,7 +182,7 @@ export default function AdminPage() {
               <div>
                 <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-white/40">Notes</label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
-                  placeholder="Condition, what to watch out for, anything useful..."
+                  placeholder="Condition, faults, what to watch out for..."
                   className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-purple-400/50 transition" />
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function AdminPage() {
               (done
                 ? "border border-green-500/30 bg-green-500/10 text-green-400"
                 : "bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50 shadow-purple-900/40")}>
-            {done ? "Flip Added ✓" : loading ? "Adding..." : "Add Flip"}
+            {done ? "Logged ✓" : loading ? "Saving..." : "Log Flip"}
           </button>
         </form>
       </div>

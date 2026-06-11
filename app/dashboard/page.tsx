@@ -129,11 +129,11 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-black uppercase tracking-tight md:text-4xl">Your Flips</h1>
-          <p className="mt-1 text-sm text-white/40">Track your op shop hustle.</p>
+          <p className="mt-1 text-sm text-white/40">Every thing you've picked up and what it's worth.</p>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-sm text-white/30">Loading...</div>
+          <div className="py-20 text-center text-sm text-white/30">Pulling your flips...</div>
         ) : (
           <>
             {/* Stats — single unified row */}
@@ -180,9 +180,9 @@ export default function DashboardPage() {
 
               {filteredFlips.length === 0 ? (
                 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] py-12 text-center">
-                  <p className="text-sm text-white/30">Nothing here yet.</p>
+                  <p className="text-sm text-white/30">Nothing here yet — get out there and find something.</p>
                   <Link href="/admin" className="mt-4 inline-flex rounded-2xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-white">
-                    Add your first flip
+                    Log a flip
                   </Link>
                 </div>
               ) : (
@@ -250,9 +250,9 @@ export default function DashboardPage() {
 
               {scans.length === 0 ? (
                 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] py-12 text-center">
-                  <p className="text-sm text-white/30">No scans yet.</p>
+                  <p className="text-sm text-white/30">Haven't scanned anything yet. What are you waiting for?</p>
                   <Link href="/scan" className="mt-4 inline-flex rounded-2xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-[0.1em] text-white">
-                    Start scanning
+                    Go scan something
                   </Link>
                 </div>
               ) : (
@@ -269,7 +269,7 @@ export default function DashboardPage() {
                       </div>
                     );
                   })}
-                </div>
+                     </div>
               )}
             </section>
           </>

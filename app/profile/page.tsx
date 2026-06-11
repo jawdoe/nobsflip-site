@@ -89,7 +89,7 @@ export default function ProfilePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.08),transparent_40%)]" />
       </div>
 
-      <div className="relative mx-auto max-w-lg px-4 py-8">
+      <div className="relative mx-auto max-w-2xl px-4 py-8">
         <div className="mb-6">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">
             NoBSFlips / Profile

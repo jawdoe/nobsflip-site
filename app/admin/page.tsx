@@ -82,7 +82,7 @@ export default function AdminPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.10),transparent_40%)]" />
       </div>
 
-      <div className="relative mx-auto max-w-lg px-4 pt-8 pb-36 md:pb-12">
+      <div className="relative mx-auto max-w-2xl px-4 pt-8 pb-36 md:pb-12">
         <div className="mb-6">
           <h1 className="text-3xl font-black uppercase tracking-tight">Log a Flip</h1>
           <p className="mt-1 text-sm text-white/40">Snagged something ripper? Chuck it in.</p>

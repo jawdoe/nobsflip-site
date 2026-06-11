@@ -145,7 +145,7 @@ export default function EditFlipPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.14),transparent_38%)]" />
       </div>
 
-      <div className="relative mx-auto max-w-lg px-4 pt-8 pb-36 md:pb-12">
+      <div className="relative mx-auto max-w-2xl px-4 pt-8 pb-36 md:pb-12">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
           <div>

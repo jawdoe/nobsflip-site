@@ -61,6 +61,7 @@ export default function ScanPage() {
     try { localStorage.setItem("nbf_postage", JSON.stringify({ mode: postageMode, amount: postageAmount })); } catch {}
   }, [postageMode, postageAmount]);
   const [barcode, setBarcode] = useState("");
+  const [pendingBarcode, setPendingBarcode] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState<"saved" | "failed" | null>(null);
@@ -122,10 +123,10 @@ export default function ScanPage() {
       const scanner = new Html5Qrcode("barcode-reader");
       scannerRef.current = scanner;
       await scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 260, height: 260 } },
-        async (decodedText: string) => { const scanned = decodedText.trim(); setBarcode(scanned); await stopCamera(); await runCheck(scanned, buyPrice, effectivePostage); },
+        async (decodedText: string) => { const scanned = decodedText.trim(); setBarcode(scanned); setPendingBarcode(scanned); await stopCamera(); setStep("price"); },
         () => {}
       );
-    } catch (err) { setError(err instanceof Error ? err.message : "Could not start camera"); setStep("price"); }
+    } catch (err) { setError(err instanceof Error ? err.message : "Could not start camera"); setStep("idle"); }
   }
 
   async function stopCamera() {
@@ -169,7 +170,7 @@ export default function ScanPage() {
             <p className="mt-1 text-sm text-white/50">What's the op shop charging for it? And who's covering postage?</p>
 
             <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Store price</label>
-            <input autoFocus type="number" min="0" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} onKeyDown={(e) => e.key === "Enter" && startCamera()} placeholder="0.00"
+            <input autoFocus type="number" min="0" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera())} placeholder="0.00"
               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30" />
 
             <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Postage</label>
@@ -204,8 +205,8 @@ export default function ScanPage() {
             )}
 
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button onClick={() => setStep("idle")} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">Cancel</button>
-              <button onClick={startCamera} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">Scan Barcode</button>
+              <button onClick={() => { setPendingBarcode(""); setStep("idle"); }} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">Cancel</button>
+              <button onClick={() => pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera()} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">{pendingBarcode ? "Check It" : "Scan Barcode"}</button>
             </div>
             <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">Can't scan it? Chuck the barcode in manually</button>
           </div>
@@ -221,7 +222,7 @@ export default function ScanPage() {
 
         <div className="md:hidden">
           <div className="flex min-h-[40vh] items-center justify-center py-8">
-            <button onClick={() => setStep("price")} disabled={step === "loading"}
+            <button onClick={() => { setPendingBarcode(""); startCamera(); }} disabled={step === "loading"}
               className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50">
               {step === "loading" ? "Checking eBay..." : "Tap to Scan"}
             </button>
@@ -304,7 +305,7 @@ export default function ScanPage() {
                   {flipSave === null && (
                     <button onClick={handleBoughtThis}
                       className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-lg transition hover:bg-white/90 active:scale-[0.97]">
-                      Yeah nah — I grabbed it
+                      Snagged It
                     </button>
                   )}
                   {flipSave === "saving" && (
@@ -392,7 +393,7 @@ export default function ScanPage() {
               </div>
             </div>
 
-            <button onClick={() => setStep("price")}
+            <button onClick={() => { setPendingBarcode(""); setResult(null); setBuyPrice(""); setStep("idle"); }}
               className="w-full rounded-2xl border border-white/10 py-4 text-sm font-black uppercase tracking-[0.08em] text-white/50 transition hover:border-purple-400/30 hover:text-white">
               Chuck Another One At Me
             </button>

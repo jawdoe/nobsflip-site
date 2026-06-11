@@ -1,4 +1,5 @@
 import Link from "next/link";
+import OnboardingBanner from "./OnboardingBanner";
 
 function DiscordIcon() {
   return (
@@ -10,6 +11,8 @@ function DiscordIcon() {
 
 export default function HomePage() {
   return (
+    <>
+    <OnboardingBanner />
     <main className="relative min-h-screen overflow-hidden bg-[#0d0b16] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.22),transparent_36%)]" />
@@ -87,6 +90,7 @@ export default function HomePage() {
         </div>
       </section>
     </main>
+    </>
   );
 }
 

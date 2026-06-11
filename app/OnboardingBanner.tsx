@@ -55,7 +55,7 @@ export default function OnboardingBanner() {
         <div className="mt-6 flex flex-col gap-2">
           <Link href="/scan" onClick={dismiss}
             className="flex items-center justify-center rounded-2xl bg-purple-600 py-3.5 text-sm font-black uppercase tracking-[0.12em] text-white shadow-[0_0_24px_rgba(147,51,234,0.35)] transition hover:bg-purple-500">
-            Yeah Nah — Let's Scan
+            Beauty — Let's Scan
           </Link>
           <button onClick={dismiss}
             className="py-2.5 text-xs text-white/30 hover:text-white/50 transition">

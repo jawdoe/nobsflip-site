@@ -5,8 +5,8 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 const FREE_FEATURES = [
-  "Barcode scanner with eBay comps",
-  "Manual flip tracking (buy / list / sell)",
+  "Barcode scanner with real eBay comps",
+  "Track your flips — bought, listed, sold",
   "Profit & ROI dashboard",
   "Country-aware eBay fee rates",
   "Postage cost calculator",
@@ -15,10 +15,10 @@ const FREE_FEATURES = [
 
 const PREMIUM_FEATURES = [
   "Everything in Free",
-  "Real sold prices — what items actually sold for",
-  "Price range on scan (low / median / high)",
+  "Real sold prices — what punters actually paid",
+  "Price range on every scan (low / median / high)",
   "Connect your eBay account",
-  "Auto-mark flips as sold when they sell on eBay",
+  "Auto-mark flips as sold when they sell",
   "Flip analytics — best categories, avg ROI, trends",
 ];
 
@@ -58,8 +58,8 @@ export default function PricingPage() {
       <div className="relative mx-auto max-w-4xl px-4 py-16 md:px-8 md:py-24">
         <div className="mb-12 text-center">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">NoBSFlips / Pricing</div>
-          <h1 className="mt-4 text-4xl font-black uppercase tracking-tight md:text-5xl">Simple Pricing</h1>
-          <p className="mt-3 text-white/50">Start free. Upgrade when the flips pay for it.</p>
+          <h1 className="mt-4 text-4xl font-black uppercase tracking-tight md:text-5xl">No Dodgy Business.</h1>
+          <p className="mt-3 text-white/50">Start free. Chuck in for premium when the flips are paying for it.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -70,7 +70,7 @@ export default function PricingPage() {
               <span className="text-5xl font-black">$0</span>
               <span className="mb-1.5 text-white/40">/month</span>
             </div>
-            <p className="mt-2 text-sm text-white/40">Everything you need to get started flipping.</p>
+            <p className="mt-2 text-sm text-white/40">Everything ya need to get out there and suss out a bargain.</p>
             <ul className="mt-6 space-y-3">
               {FREE_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm text-white/70">
@@ -79,7 +79,7 @@ export default function PricingPage() {
               ))}
             </ul>
             <Link href="/scan" className="mt-8 block w-full rounded-2xl border border-white/10 py-3 text-center text-sm font-black uppercase tracking-[0.08em] text-white/50 transition hover:text-white">
-              Start Scanning Free
+              Give It a Burl — Free
             </Link>
           </div>
 
@@ -93,7 +93,7 @@ export default function PricingPage() {
               <span className="text-5xl font-black">$9</span>
               <span className="mb-1.5 text-white/40">/month</span>
             </div>
-            <p className="mt-2 text-sm text-white/40">For flippers who are serious about the numbers.</p>
+            <p className="mt-2 text-sm text-white/40">For serious flippers who want the full picture, no waffle.</p>
             <ul className="mt-6 space-y-3">
               {PREMIUM_FEATURES.map((f, i) => (
                 <li key={f} className={"flex items-start gap-2.5 text-sm " + (i === 0 ? "text-white/40" : "text-white")}>
@@ -110,17 +110,17 @@ export default function PricingPage() {
             ) : (
               <button onClick={handleUpgrade} disabled={checkoutLoading}
                 className="mt-8 w-full rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_24px_rgba(147,51,234,0.4)] transition hover:bg-purple-500 disabled:opacity-60">
-                {checkoutLoading ? "Loading..." : "Upgrade to Premium →"}
+                {checkoutLoading ? "On it..." : "Get Premium — Let's Go →"}
               </button>
             )}
-            <p className="mt-3 text-center text-xs text-white/25">Cancel anytime. No lock-in.</p>
+            <p className="mt-3 text-center text-xs text-white/25">Cancel anytime. No lock-in, no dramas.</p>
           </div>
         </div>
 
         <div className="mt-12 rounded-[2rem] border border-white/10 bg-white/[0.02] p-8 text-center">
           <p className="text-sm font-black uppercase tracking-[0.15em] text-white/30">The math</p>
-          <p className="mt-3 text-2xl font-black">One good flip pays for a whole year.</p>
-          <p className="mt-2 text-sm text-white/40">At $9/month, you need one extra flip per month to break even. The sold data alone should find you that.</p>
+          <p className="mt-3 text-2xl font-black">One ripper flip pays for the whole year.</p>
+          <p className="mt-2 text-sm text-white/40">$9/month. Find one extra flip a month and it pays for itself. The real sold data should hand that to ya on a plate.</p>
         </div>
       </div>
     </main>

@@ -152,9 +152,9 @@ export default function DashboardPage() {
                   {netProfit !== 0 ? (netProfit > 0 ? "+" : "") + fmt(netProfit) : "—"}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Avg flip time</p>
-                <p className="mt-1 text-xl font-black text-white">{avgDays !== null ? avgDays + "d" : "—"}</p>
+              <div className={"rounded-2xl border p-4 " + (roi > 0 ? "border-purple-500/20 bg-purple-500/[0.07]" : "border-white/10 bg-white/[0.04]")}>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">ROI</p>
+                <p className={"mt-1 text-xl font-black " + (roi > 0 ? "text-purple-300" : "text-white")}>{soldCost > 0 ? roi.toFixed(0) + "%" : "—"}</p>
               </div>
             </div>
 

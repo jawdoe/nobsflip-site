@@ -5,7 +5,6 @@ import "./globals.css";
 import SiteNav from "./SiteNav";
 import MobileBottomNav from "./MobileBottomNav";
 import HeaderAvatar from "./HeaderAvatar";
-import OnboardingBanner from "./OnboardingBanner";
 
 const BRAND_NAME = "NOBSFLIPS";
 const BRAND_TAGLINE = "No Bullshit. Just Flips.";
@@ -70,7 +69,6 @@ export default function RootLayout({
           </footer>
 
           <MobileBottomNav />
-          <OnboardingBanner />
         </div>
       </body>
     </html>

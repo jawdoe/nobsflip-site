@@ -17,9 +17,15 @@ CREATE TABLE IF NOT EXISTS profiles (
   ebay_refresh_token text,
   ebay_token_expires_at timestamptz,
   ebay_user_id text,
+  display_name text,
+  avatar_url text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- (for databases where profiles already existed without these columns)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS display_name text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url text;
 
 -- Auto-create a profile row whenever a user signs up
 CREATE OR REPLACE FUNCTION handle_new_user()

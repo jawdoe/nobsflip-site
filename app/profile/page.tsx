@@ -78,7 +78,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0d0b16]">
-        <div className="text-sm text-white/30">Loading...</div>
+        <div className="text-sm text-white/30">Hang on...</div>
       </main>
     );
   }
@@ -94,7 +94,7 @@ export default function ProfilePage() {
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">
             NoBSFlips / Profile
           </div>
-          <h1 className="mt-3 text-3xl font-black uppercase tracking-tight">Profile</h1>
+          <h1 className="mt-3 text-3xl font-black uppercase tracking-tight">Your Profile</h1>
         </div>
 
         {/* Avatar */}
@@ -122,10 +122,10 @@ export default function ProfilePage() {
             </div>
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-          {uploadError && <p className="text-xs text-red-400 text-center">{uploadError}</p>}
-          {uploadDone && <p className="text-xs text-green-400 text-center">Photo updated ✓</p>}
+          {uploadError && <p className="text-xs text-red-400 text-center">No good — {uploadError}</p>}
+          {uploadDone && <p className="text-xs text-green-400 text-center">On ya — pic updated ✓</p>}
           {!uploadError && !uploadDone && (
-            <p className="text-xs text-white/30">{uploadingAvatar ? "Uploading..." : "Tap to change photo"}</p>
+            <p className="text-xs text-white/30">{uploadingAvatar ? "Sending it up..." : "Tap to swap ya pic"}</p>
           )}
         </div>
 
@@ -160,7 +160,7 @@ export default function ProfilePage() {
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
+              placeholder="What do ya mates call ya?"
               className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
             />
           </div>
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                 : "border border-purple-400/30 bg-purple-500/15 text-purple-300 hover:bg-purple-500/25")
             }
           >
-            {saved ? "Saved ✓" : saving ? "Saving..." : "Save Changes"}
+            {saved ? "Saved ✓" : saving ? "Saving..." : "Save It"}
           </button>
         </div>
 
@@ -183,7 +183,7 @@ export default function ProfilePage() {
           onClick={handleSignOut}
           className="w-full rounded-xl border border-white/10 py-3 text-xs font-black uppercase tracking-[0.1em] text-white/40 transition hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-300"
         >
-          Sign Out
+          Chuck It — Sign Out
         </button>
       </div>
     </main>

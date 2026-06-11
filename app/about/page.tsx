@@ -46,25 +46,25 @@ export default function AboutPage() {
             </div>
 
             <h1 className="mt-5 text-[2.8rem] font-black uppercase leading-[0.9] tracking-tight text-white md:text-7xl">
-              The point
-              <span className="block text-purple-300">of this.</span>
+              No Gurus.
+              <span className="block text-purple-300">Just flips.</span>
             </h1>
 
             <p className="mt-6 text-sm leading-7 text-white/80 md:max-w-3xl md:text-lg md:leading-8">
-              NoBSFlips is a public flipping journal. Not fake guru stuff. Not
-              rented Lambos. Not pretending every item is a massive win.
+              NoBSFlips is a fair dinkum public flipping journal. Not fake guru stuff. Not
+              rented Lambos. Not pretending every item is a ripper.
             </p>
 
             <p className="mt-5 text-sm leading-7 text-white/68 md:max-w-3xl md:text-lg md:leading-8">
-              The goal is simple: buy stuff, test ideas, learn from the numbers,
-              and show the full process publicly — including the mistakes, slow
-              movers, and bad buys.
+              The idea is simple: buy stuff at the op shop, test ideas, learn from the numbers,
+              and show the full process publicly — including the mistakes, the slow
+              movers, and the bad buys.
             </p>
 
             <p className="mt-5 text-sm leading-7 text-white/68 md:max-w-3xl md:text-lg md:leading-8">
               Over time this becomes a real results journal: what was bought,
               what it listed for, what it sold for, how long it took, and what
-              actually worked.
+              actually worked. No waffle, just the facts.
             </p>
 
             <div className="mt-8 overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-[0_0_30px_rgba(0,0,0,0.35)]">
@@ -131,8 +131,9 @@ export default function AboutPage() {
               </h2>
 
               <p className="mt-4 text-sm leading-7 text-white/68">
-                The site tracks the journey, not just the wins. Bought price,
-                listed price, sold price, ROI, days to sell, and lessons learned.
+                Tracks the journey, not just the wins. Bought price,
+                listed price, sold price, ROI, days to sell — all of it.
+                The good flips and the dud ones.
               </p>
             </div>
 
@@ -140,19 +141,19 @@ export default function AboutPage() {
               <InfoCard
                 label="Real Numbers"
                 title="No fake wins"
-                text="Every flip can be tracked publicly. Good or bad."
+                text="Every flip tracked publicly. Good buys, dud buys, the lot."
               />
 
               <InfoCard
                 label="Real Journey"
                 title="Built in public"
-                text="The videos, website, and tools evolve as the journey evolves."
+                text="The videos, the tools, and the site evolve as the journey evolves. No pretending."
               />
 
               <InfoCard
                 label="Real Learning"
                 title="Trial and error"
-                text="Testing what actually works instead of pretending to know everything already."
+                text="Testing what actually works instead of spruiking stuff I haven't tried."
               />
             </div>
 
@@ -179,7 +180,7 @@ export default function AboutPage() {
                 </SocialLink>
 
                 <SocialLink
-                  href="https://discord.gg"
+                  href="https://discord.gg/bvThRRf9Y5"
                   label="Discord"
                   className="border-purple-400/35 bg-purple-500/10 shadow-[0_0_25px_rgba(147,51,234,0.16)] hover:border-purple-300/60 hover:bg-purple-500/20"
                 >

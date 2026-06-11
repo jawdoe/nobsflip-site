@@ -97,12 +97,12 @@ export default function MobileBottomNav() {
       <div className="flex items-end">
         <NavItem href="/admin" label="Add" active={pathname.startsWith("/admin")}
           icon={<Icon d={ICONS.add} />} />
-        <NavItem href="/dashboard" label="Log" active={pathname.startsWith("/dashboard")}
+        <NavItem href="/dashboard" label="Flips" active={pathname.startsWith("/dashboard")}
           icon={<Icon d={ICONS.log} />} />
         <ScanButton active={scanActive} />
         <NavItem href="/pricing" label="Upgrade" active={pathname.startsWith("/pricing")}
           icon={<Icon d={ICONS.upgrade} />} />
-        <NavItem href="/profile" label="Profile" active={pathname.startsWith("/dashboard") && false}
+        <NavItem href="/profile" label="Profile" active={pathname.startsWith("/profile")}
           icon={<Icon d={ICONS.me} />} />
       </div>
     </nav>

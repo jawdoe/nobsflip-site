@@ -149,10 +149,14 @@ export default function ScanPage() {
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">Find the barcode</p>
-              <p className="text-xs text-white/40">
-                Paying: {buyPrice ? formatMoney(Number(buyPrice)) : "—"}
-                {postageMode === "buyer" ? " · buyer pays post" : ` · you cover post (${formatMoney(Number(postageAmount || 0))})`}
-              </p>
+              {buyPrice ? (
+                <p className="text-xs text-white/40">
+                  Paying: {formatMoney(Number(buyPrice))}
+                  {postageMode === "buyer" ? " · buyer pays post" : ` · you cover post (${formatMoney(Number(postageAmount || 0))})`}
+                </p>
+              ) : (
+                <p className="text-xs text-white/40">Point at the barcode — hold it steady</p>
+              )}
             </div>
             <button onClick={stopCamera} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">Cancel</button>
           </div>
@@ -166,8 +170,21 @@ export default function ScanPage() {
       {step === "price" && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-white">Quick one first</h2>
-            <p className="mt-1 text-sm text-white/50">What's the op shop charging for it? And who's covering postage?</p>
+            {pendingBarcode ? (
+              <>
+                <div className="mb-3 flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2">
+                  <span className="text-xs font-black text-green-400">✓ Got it</span>
+                  <span className="truncate text-xs text-green-300/70 font-mono">{pendingBarcode}</span>
+                </div>
+                <h2 className="text-lg font-black uppercase tracking-tight text-white">What's it going for?</h2>
+                <p className="mt-1 text-sm text-white/50">Chuck in the op shop price and who's covering postage.</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-black uppercase tracking-tight text-white">Quick one first</h2>
+                <p className="mt-1 text-sm text-white/50">What's the op shop charging for it? And who's covering postage?</p>
+              </>
+            )}
 
             <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Store price</label>
             <input autoFocus type="number" min="0" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera())} placeholder="0.00"
@@ -208,7 +225,7 @@ export default function ScanPage() {
               <button onClick={() => { setPendingBarcode(""); setStep("idle"); }} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">Cancel</button>
               <button onClick={() => pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera()} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">{pendingBarcode ? "Check It" : "Scan Barcode"}</button>
             </div>
-            <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">Can't scan it? Chuck the barcode in manually</button>
+            {!pendingBarcode && <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">Can't scan it? Chuck the barcode in manually</button>}
           </div>
         </div>
       )}
@@ -390,7 +407,7 @@ export default function ScanPage() {
                     <p className="shrink-0 text-sm font-black text-purple-300">{formatMoney(Number(item.price))}</p>
                   </a>
                 ))}
-              </div>
+                 </div>
             </div>
 
             <button onClick={() => { setPendingBarcode(""); setResult(null); setBuyPrice(""); setStep("idle"); }}

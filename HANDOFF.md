@@ -23,8 +23,8 @@ PREMIUM ($9/mo): everything in free + real sold prices, price range per scan,
 connect eBay account, auto-mark sold, flip analytics.
 
 ## DECISIONS LOCKED 2026-06-11 (implement these)
-1. **Free tier limit = daily scan cap.** Free users get **10 scans/day**, then a
-   friendly "come back tomorrow or upgrade" prompt. Resets daily.
+1. **Free tier limit = daily scan cap.** Free users get **5 scans/day** (changed
+   from 10 on 2026-06-11), then a "come back tomorrow or upgrade" prompt. Resets daily.
    - Put the cap number in ONE config constant so it's easy to change.
 2. **Keep the pricing-page contract for free features** — free KEEPS flip tracking,
    dashboard, and scan history. Do NOT also cap saved flips. The daily scan cap is
@@ -34,7 +34,7 @@ connect eBay account, auto-mark sold, flip analytics.
 - [x] Daily scan counter: `supabase-scan-limit-migration.sql` adds
       `daily_scan_count` + `scan_count_date` to `profiles` and a `consume_scan(uuid,int)`
       RPC (atomic check-and-increment, premium = unlimited, resets daily).
-- [x] Cap constant + helper in `lib/premium.ts`: `FREE_DAILY_SCAN_LIMIT = 10`
+- [x] Cap constant + helper in `lib/premium.ts`: `FREE_DAILY_SCAN_LIMIT = 5`
       and `consumeScan(userId)` (fails open on DB error).
 - [x] Server enforcement in `app/api/sold-comps/route.ts`: calls `consumeScan`,
       returns 429 `{capReached, limit, used}` when over cap, includes

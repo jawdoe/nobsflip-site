@@ -24,7 +24,7 @@ export async function isPremium(userId: string): Promise<boolean> {
 
 // Free tier: scans allowed per user per day. Premium = unlimited.
 // Change this one value to adjust the free allowance everywhere.
-export const FREE_DAILY_SCAN_LIMIT = 10;
+export const FREE_DAILY_SCAN_LIMIT = 5;
 
 export type ScanQuota = {
   allowed: boolean;

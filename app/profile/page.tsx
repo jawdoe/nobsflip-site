@@ -136,9 +136,25 @@ export default function ProfilePage() {
             <p className="mt-0.5 font-black text-white">{isPremium ? "Premium" : "Free"}</p>
           </div>
           {isPremium ? (
-            <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-purple-300">
-              ✦ Active
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-purple-300">
+                ✦ Active
+              </span>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/lemonsqueezy/portal", { method: "POST" });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                    else alert(data.error ?? "Couldn't open the billing portal — try again in a tick.");
+                  } catch {
+                    alert("Couldn't open the billing portal — try again in a tick.");
+                  }
+                }}
+                className="rounded-full border border-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white/50 transition hover:border-white/30 hover:text-white">
+                Manage
+              </button>
+            </div>
           ) : (
             <a href="/pricing" className="rounded-full border border-purple-400/30 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-purple-300 transition hover:bg-purple-500/20">
               Upgrade →

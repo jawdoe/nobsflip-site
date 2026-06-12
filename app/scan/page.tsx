@@ -74,6 +74,16 @@ export default function ScanPage() {
 
   useEffect(() => { setCountry(getCountry()); }, []);
 
+  // Bottom-nav Scan button (when already on /scan) fires this to start a fresh scan.
+  useEffect(() => {
+    const handler = () => {
+      setResult(null); setError(""); setBuyPrice(""); setPendingBarcode(""); setCapReached(null);
+      startCamera();
+    };
+    window.addEventListener("nbf:rescan", handler);
+    return () => window.removeEventListener("nbf:rescan", handler);
+  }, []);
+
   const satchelOptions = freePostageOptions[country] ?? defaultPostageOptions;
   const effectivePostage = postageMode === "buyer" ? "0" : (postageAmount || "0");
 

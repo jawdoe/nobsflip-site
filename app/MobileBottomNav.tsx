@@ -37,7 +37,16 @@ function NavItem({ href, label, icon, active }: { href: string; label: string; i
 
 function ScanButton({ active }: { active: boolean }) {
   return (
-    <Link href="/scan" className="relative flex flex-1 flex-col items-center justify-end pb-2">
+    <Link
+      href="/scan"
+      onClick={(e) => {
+        // Already on the scan page: don't no-op navigate — start a fresh scan.
+        if (active) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("nbf:rescan"));
+        }
+      }}
+      className="relative flex flex-1 flex-col items-center justify-end pb-2">
       <div className={
         "absolute -top-6 flex h-16 w-16 flex-col items-center justify-center rounded-full shadow-lg transition-all " +
         (active ? "bg-purple-500 shadow-purple-500/25 scale-105" : "bg-purple-600 shadow-purple-600/20")

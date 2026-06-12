@@ -20,6 +20,7 @@ export default function SiteNav() {
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -27,14 +28,15 @@ export default function SiteNav() {
       const u = data.user;
       setUser(u);
       if (u) {
-        const { data: profile } = await supabase.from("profiles").select("display_name,avatar_url").eq("id", u.id).single();
+        const { data: profile } = await supabase.from("profiles").select("display_name,avatar_url,is_premium").eq("id", u.id).single();
         setDisplayName(profile?.display_name ?? null);
         setAvatarUrl(profile?.avatar_url ?? null);
+        setIsPremium(profile?.is_premium === true);
       }
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
-      if (!session?.user) { setDisplayName(null); setAvatarUrl(null); }
+      if (!session?.user) { setDisplayName(null); setAvatarUrl(null); setIsPremium(false); }
     });
     return () => listener.subscription.unsubscribe();
   }, [pathname]);
@@ -48,9 +50,13 @@ export default function SiteNav() {
   const initials = user?.email?.[0]?.toUpperCase() ?? "?";
   const label = displayName ?? user?.email?.split("@")[0] ?? "";
 
+  const items = isPremium
+    ? [...navItems.slice(0, 4), { href: "/analytics", label: "Analytics" }, ...navItems.slice(4)]
+    : navItems;
+
   return (
     <nav className="hidden items-center gap-2 md:flex">
-      {navItems.map((item) => {
+      {items.map((item) => {
         const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         return (
           <Link key={item.href} href={item.href}

@@ -10,6 +10,7 @@ type EbayResult = {
   averagePrice: number; medianPrice: number; estimatedSalePrice: number;
   ebayFeeEstimate: number; estimatedProfit: number; roi: number;
   lowPrice: number; highPrice: number; isPremium: boolean; freeScansRemaining?: number | null;
+  soldCount?: number; demandLabel?: "High" | "Medium" | "Low" | "None" | null;
   verdict: "BUY" | "MAYBE" | "SKIP";
   _debug?: { findingApiStatus: string; country: string; marketplace: string };
   items: { title: string; price: string; currency: string; condition: string; soldDate: string; url: string; }[];
@@ -386,6 +387,22 @@ export default function ScanPage() {
                   <span className="text-sm text-white/50">High {formatMoney(result.highPrice)}</span>
                 </div>
                 <p className="mt-1.5 text-center text-xs text-purple-200">Median {formatMoney(result.medianPrice)}</p>
+              </div>
+            )}
+            {result.isPremium && result.demandLabel && (
+              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-white/40">Demand</p>
+                  <p className="text-[10px] text-white/30">{result.soldCount ?? 0} sold recently</p>
+                </div>
+                {(() => {
+                  const d = result.demandLabel;
+                  const cfg = d === "High" ? { t: "text-green-400", b: "border-green-500/40", bg: "bg-green-500/10", label: "🔥 High — sells fast" }
+                    : d === "Medium" ? { t: "text-yellow-400", b: "border-yellow-500/40", bg: "bg-yellow-500/10", label: "Medium — steady" }
+                    : d === "Low" ? { t: "text-orange-400", b: "border-orange-500/40", bg: "bg-orange-500/10", label: "Low — slow mover" }
+                    : { t: "text-red-400", b: "border-red-500/40", bg: "bg-red-500/10", label: "None — risky" };
+                  return <span className={"rounded-xl border px-3 py-1.5 text-xs font-black " + cfg.b + " " + cfg.bg + " " + cfg.t}>{cfg.label}</span>;
+                })()}
               </div>
             )}
             {!result.isPremium && (

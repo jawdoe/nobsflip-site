@@ -238,6 +238,17 @@ export async function GET(req: NextRequest) {
     const roi = buyPrice > 0 ? (estimatedProfit / buyPrice) * 100 : 0;
     const verdict = getVerdict(estimatedProfit, roi, items.length);
 
+    // Demand signal — only meaningful for real sold data, not active listings.
+    const isSoldData = dataSource !== "EBAY_BROWSE_ACTIVE";
+    const soldCount = items.length;
+    let demandLabel: "High" | "Medium" | "Low" | "None" | null = null;
+    if (isSoldData) {
+      if (soldCount >= 15) demandLabel = "High";
+      else if (soldCount >= 6) demandLabel = "Medium";
+      else if (soldCount >= 1) demandLabel = "Low";
+      else demandLabel = "None";
+    }
+
     return NextResponse.json({
       search: searchTerm,
       resolvedFrom: barcodeResolved ? rawBarcode : null,
@@ -258,6 +269,8 @@ export async function GET(req: NextRequest) {
       estimatedProfit: cleanNumber(estimatedProfit),
       roi: cleanNumber(roi),
       verdict, items,
+      soldCount,
+      demandLabel,
       _debug: { findingApiStatus, country, marketplace: marketplace.globalId },
     });
   } catch (error) {

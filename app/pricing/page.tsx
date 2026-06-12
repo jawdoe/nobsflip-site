@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 const FREE_FEATURES = [
-  "Barcode scanner with real eBay comps",
+  "5 barcode scans a day with eBay comps",
   "Track your flips — bought, listed, sold",
   "Profit & ROI dashboard",
   "Country-aware eBay fee rates",
@@ -15,11 +15,12 @@ const FREE_FEATURES = [
 
 const PREMIUM_FEATURES = [
   "Everything in Free",
+  "Unlimited scans — no daily cap",
   "Real sold prices — what punters actually paid",
   "Price range on every scan (low / median / high)",
+  "Demand check — how many sold recently, so you know it'll move",
   "Connect your eBay account",
-  "Auto-mark flips as sold when they sell",
-  "Flip analytics — best categories, avg ROI, trends",
+  "Flip analytics — profit, ROI & win rate",
 ];
 
 export default function PricingPage() {

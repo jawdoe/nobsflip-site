@@ -46,7 +46,24 @@ connect eBay account, auto-mark sold, flip analytics.
       `app/api/ebay/oauth/start/route.ts` AND `.../callback/route.ts` (redirects
       non-premium to /pricing). UI was already gated in `app/profile/page.tsx`.
 
+## DONE 2026-06-11 (premium value pass)
+- [x] Scan cap lowered to 5/day (`FREE_DAILY_SCAN_LIMIT = 5`).
+- [x] Demand indicator: sold-comps API returns `soldCount` + `demandLabel`
+      (High/Medium/Low/None from sold-listing count). Scan page shows a premium-only
+      demand card. Gives flippers a "will it sell / how fast" signal.
+- [x] Trimmed "Auto-mark sold" from pricing (too fragile for launch — revisit later).
+      Pricing premium list now: unlimited scans, real sold prices, price range,
+      demand check, eBay connect, flip analytics. Free list notes "5 scans a day".
+- [x] Built `/analytics` page (premium-gated via middleware + is_premium check):
+      total profit (net of eBay fees), avg ROI, win rate, pipeline counts, best flip.
+      Added "Analytics" nav link in SiteNav for premium users only.
+- [x] Added defensive `flip_posts` column guards (user_id, actual_sell) to
+      supabase-setup.sql — analytics/dashboard need them.
+
 ## MANUAL STEPS REMAINING (do these to finish go-live)
+0. RE-RUN `supabase-setup.sql` (idempotent) so the flip_posts column guards apply.
+   PUSH the code (git) so the cap/demand/analytics actually deploy — Vercel "Redeploy"
+   alone does NOT include un-pushed code.
 1. Run BOTH migrations in the Supabase SQL editor:
    - `supabase-premium-migration.sql` (if not already run)
    - `supabase-scan-limit-migration.sql`  <-- NEW, required for the cap

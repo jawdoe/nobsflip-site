@@ -112,3 +112,17 @@ $$;
 
 GRANT EXECUTE ON FUNCTION consume_scan(uuid, int) TO service_role;
 GRANT EXECUTE ON FUNCTION consume_scan(uuid, int) TO authenticated;
+
+-- =========================================================================
+-- 3. Ensure flip_posts has the columns the app reads/writes
+--    (dashboard, fliplog, scan-save, and analytics all need these).
+--    Guarded so it does nothing if flip_posts doesn't exist yet.
+-- =========================================================================
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables
+             WHERE table_schema = 'public' AND table_name = 'flip_posts') THEN
+    ALTER TABLE public.flip_posts ADD COLUMN IF NOT EXISTS user_id uuid;
+    ALTER TABLE public.flip_posts ADD COLUMN IF NOT EXISTS actual_sell numeric;
+  END IF;
+END $$;

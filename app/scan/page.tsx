@@ -247,7 +247,7 @@ export default function ScanPage() {
         </div>
       )}
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-36 md:px-8 md:py-12 md:pb-12">
+      <div className="relative mx-auto max-w-2xl px-4 pt-8 pb-36 md:px-8 md:py-12 md:pb-12">
         <div className="mb-6">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">NoBSFlips / Scanner</div>
           <h1 className="mt-3 text-3xl font-black uppercase tracking-tight md:text-4xl">Barcode Flip Scanner</h1>
@@ -255,12 +255,14 @@ export default function ScanPage() {
         </div>
 
         <div className="md:hidden">
-          <div className="flex min-h-[40vh] items-center justify-center py-8">
-            <button onClick={() => { setPendingBarcode(""); startCamera(); }} disabled={step === "loading"}
-              className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50">
-              {step === "loading" ? "Checking eBay..." : "Tap to Scan"}
-            </button>
-          </div>
+          {!result && (
+            <div className="flex min-h-[40vh] items-center justify-center py-8">
+              <button onClick={() => { setPendingBarcode(""); startCamera(); }} disabled={step === "loading"}
+                className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50">
+                {step === "loading" ? "Checking eBay..." : "Tap to Scan"}
+              </button>
+            </div>
+          )}
           {step === "manual" && (
             <div className="mt-3 space-y-2">
               <input autoFocus value={barcode} onChange={(e) => setBarcode(e.target.value)} onKeyDown={(e) => e.key === "Enter" && runCheck(barcode, buyPrice, effectivePostage)} placeholder="Enter barcode manually" inputMode="numeric"

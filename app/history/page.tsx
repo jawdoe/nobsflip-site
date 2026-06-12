@@ -66,7 +66,7 @@ export default function HistoryPage() {
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.10),transparent_40%)]" />
       </div>
-      <div className="relative mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
+      <div className="relative mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12">
         <div className="mb-6">
           <div className="inline-flex rounded-full border border-purple-400/35 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">
             NoBSFlips / History

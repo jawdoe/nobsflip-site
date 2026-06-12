@@ -96,7 +96,7 @@ export default function DashboardPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.10),transparent_40%)]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-36 md:px-8 md:py-12 md:pb-12">
+      <div className="relative mx-auto max-w-5xl px-4 pt-8 pb-36 md:px-8 md:py-12 md:pb-12">
 
         {/* Header */}
         <div className="mb-6">

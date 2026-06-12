@@ -173,8 +173,9 @@ export default function ScanPage() {
       )}
 
       {step === "price" && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 sm:rounded-[2rem]">
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/70 backdrop-blur-sm">
+          <div className="flex min-h-full items-end justify-center sm:items-center sm:p-4">
+          <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 pb-8 sm:rounded-[2rem] sm:pb-6">
             {pendingBarcode ? (
               <>
                 <div className="mb-3 flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2">
@@ -231,6 +232,7 @@ export default function ScanPage() {
               <button onClick={() => pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera()} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">{pendingBarcode ? "Check It" : "Scan Barcode"}</button>
             </div>
             {!pendingBarcode && <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">Can't scan it? Chuck the barcode in manually</button>}
+          </div>
           </div>
         </div>
       )}
@@ -428,11 +430,6 @@ export default function ScanPage() {
               {result.postage > 0 ? ` + postage ${formatMoney(result.postage)} (you cover)` : " + buyer pays post"}
               {` + eBay ${formatMoney(result.ebayFeeEstimate)}`}
             </div>
-            {result._debug && (
-              <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-2 font-mono text-[10px] text-white/25">
-                debug: finding={result._debug.findingApiStatus} · country={result._debug.country} · market={result._debug.marketplace}
-              </div>
-            )}
 
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4">
               <h3 className="mb-3 text-sm font-black uppercase tracking-tight">{result.dataSource === "EBAY_BROWSE_ACTIVE" ? "Active Listings" : "Sold Listings"}</h3>

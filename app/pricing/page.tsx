@@ -19,7 +19,6 @@ const PREMIUM_FEATURES = [
   "Real sold prices — what punters actually paid",
   "Price range on every scan (low / median / high)",
   "Demand check — how many sold recently, so you know it'll move",
-  "Connect your eBay account",
   "Flip analytics — profit, ROI & win rate",
 ];
 

@@ -1,7 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { consumeScan } from "@/lib/premium";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+
+// --- Sold-comps cache (cuts Apify cost: reuse recent results for the same item) ---
+const CACHE_TTL_DAYS = 7;
+function cacheClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
+async function getCachedComps(key: string, country: string): Promise<SoldItem[] | null> {
+  try {
+    const supabase = cacheClient();
+    const { data } = await supabase
+      .from("sold_comps_cache")
+      .select("items, created_at")
+      .eq("search_key", key)
+      .eq("country", country)
+      .single();
+    if (!data) return null;
+    const ageMs = Date.now() - new Date(data.created_at).getTime();
+    if (ageMs > CACHE_TTL_DAYS * 86400000) return null;
+    return data.items as SoldItem[];
+  } catch {
+    return null;
+  }
+}
+async function setCachedComps(key: string, country: string, source: string, items: SoldItem[]) {
+  try {
+    const supabase = cacheClient();
+    await supabase
+      .from("sold_comps_cache")
+      .upsert(
+        { search_key: key, country, source, items, created_at: new Date().toISOString() },
+        { onConflict: "search_key,country" }
+      );
+  } catch {
+    // cache failures are non-fatal
+  }
+}
 
 type Verdict = "BUY" | "MAYBE" | "SKIP";
 type SoldItem = { title: string; price: number; currency: string; url: string; image: string | null; condition: string | null; soldDate: string | null; };
@@ -184,15 +225,25 @@ export async function GET(req: NextRequest) {
     let warning = "";
     let findingApiStatus = "";
 
-    // Premium: try Apify first for real sold data
+    // Premium: real sold data via Apify, with a cache to avoid paying twice
+    // for the same item. Cache hit = free; miss = one Apify run, then stored.
     if (userIsPremium) {
-      const apifyResult = await fetchApify(searchTerm, marketplace);
-      if (apifyResult.items && apifyResult.items.length > 0) {
-        items = apifyResult.items;
-        dataSource = "APIFY_SOLD";
-        findingApiStatus = `Apify OK - ${items.length} results`;
+      const cacheKey = searchTerm.toLowerCase().trim();
+      const cached = await getCachedComps(cacheKey, country);
+      if (cached && cached.length > 0) {
+        items = cached;
+        dataSource = "APIFY_SOLD_CACHED";
+        findingApiStatus = `Cache hit - ${items.length} results`;
       } else {
-        findingApiStatus = `Apify failed (${apifyResult.error}) - falling back`;
+        const apifyResult = await fetchApify(searchTerm, marketplace);
+        if (apifyResult.items && apifyResult.items.length > 0) {
+          items = apifyResult.items;
+          dataSource = "APIFY_SOLD";
+          findingApiStatus = `Apify OK - ${items.length} results`;
+          await setCachedComps(cacheKey, country, "APIFY_SOLD", items);
+        } else {
+          findingApiStatus = `Apify failed (${apifyResult.error}) - falling back`;
+        }
       }
     }
 

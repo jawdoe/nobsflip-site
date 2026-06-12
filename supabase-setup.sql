@@ -126,3 +126,19 @@ BEGIN
     ALTER TABLE public.flip_posts ADD COLUMN IF NOT EXISTS actual_sell numeric;
   END IF;
 END $$;
+
+-- =========================================================================
+-- 4. Sold-comps cache — reuse recent Apify sold data to cut cost.
+--    Keyed by normalized search term + country. Only the service role
+--    (server-side scan API) touches it, so RLS stays locked down.
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS sold_comps_cache (
+  search_key text NOT NULL,
+  country    text NOT NULL,
+  source     text,
+  items      jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (search_key, country)
+);
+ALTER TABLE sold_comps_cache ENABLE ROW LEVEL SECURITY;
+-- No public policies: only the service-role key can read/write it.

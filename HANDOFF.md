@@ -60,10 +60,22 @@ connect eBay account, auto-mark sold, flip analytics.
 - [x] Added defensive `flip_posts` column guards (user_id, actual_sell) to
       supabase-setup.sql — analytics/dashboard need them.
 
+## APIFY / SOLD DATA (premium's headline feature)
+- Premium "real sold prices" comes from the Apify actor `caffein.dev/ebay-sold-listings`
+  (~$4 / 1000 results = ~$0.10 per 25-result scan). Set `APIFY_TOKEN` in Vercel or
+  premium silently falls back to ACTIVE asking prices (feature doesn't actually work).
+- Cost control: `sold_comps_cache` table caches Apify results by search term + country
+  for 7 days (CACHE_TTL_DAYS in app/api/sold-comps/route.ts). Premium-only; cache hits
+  are free. Margin note: $9/mo unlimited vs $0.10/scan — caching is what keeps this
+  profitable for heavy users. If volume outgrows it, consider a flat-rate provider
+  (RapidAPI eBay sold APIs ~$10-40/mo; PriceCharting flat-rate for games/cards).
+- eBay's official Marketplace Insights API (free sold data) is approval-only/partner —
+  not obtainable as an indie.
+
 ## MANUAL STEPS REMAINING (do these to finish go-live)
-0. RE-RUN `supabase-setup.sql` (idempotent) so the flip_posts column guards apply.
-   PUSH the code (git) so the cap/demand/analytics actually deploy — Vercel "Redeploy"
-   alone does NOT include un-pushed code.
+0. RE-RUN `supabase-setup.sql` (idempotent) — now also creates `sold_comps_cache`.
+   Set `APIFY_TOKEN` in Vercel. PUSH the code (git) — Vercel "Redeploy" alone does
+   NOT include un-pushed code.
 1. Run BOTH migrations in the Supabase SQL editor:
    - `supabase-premium-migration.sql` (if not already run)
    - `supabase-scan-limit-migration.sql`  <-- NEW, required for the cap

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import OnboardingBanner from "./OnboardingBanner";
+import InstallAppButton from "./InstallAppButton";
 
 function DiscordIcon() {
   return (
@@ -65,6 +66,10 @@ export default function HomePage() {
             <Step num="1" title="Scan the barcode" body="Point ya phone at the barcode on the shelf. Or type it in manually if ya don't trust the camera." />
             <Step num="2" title="See real sold prices" body="Actual eBay sales from your local marketplace — not what some bloke reckons it's worth, what people actually paid." />
             <Step num="3" title="Get a straight answer" body="Chuck in what the shop's asking and get a true blue YES, MAYBE, or HELL NO. No galah business, just the facts." />
+          </div>
+          <div className="mt-6 flex flex-col items-center gap-2 md:mt-8">
+            <InstallAppButton />
+            <p className="text-xs text-white/35">Add it to ya home screen — runs like an app, no app store needed.</p>
           </div>
         </div>
         <div className="mt-8 rounded-[2rem] border border-purple-500/20 bg-purple-500/5 p-5 md:mt-16 md:p-8 lg:flex lg:items-center lg:justify-between lg:gap-12">

@@ -5,6 +5,8 @@ import "./globals.css";
 import SiteNav from "./SiteNav";
 import MobileBottomNav from "./MobileBottomNav";
 import HeaderAvatar from "./HeaderAvatar";
+import PWA from "./PWA";
+import SocialLinks from "./SocialLinks";
 
 const BRAND_NAME = "NOBSFLIPS";
 const BRAND_TAGLINE = "No Bullshit. Just Flips.";
@@ -73,16 +75,18 @@ export default function RootLayout({
           {/* Extra bottom padding on mobile so content isn't hidden behind bottom nav */}
           <main className="flex-1 pb-20 md:pb-0">{children}</main>
 
-          <footer className="hidden border-t border-purple-500/15 bg-black/70 md:block">
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-zinc-400 md:flex-row md:items-center md:justify-between">
-              <div>
+          <footer className="border-t border-purple-500/15 bg-black/70">
+            <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-5 px-6 pb-28 pt-8 text-sm text-zinc-400 md:flex-row md:justify-between md:pb-8">
+              <div className="text-center md:text-left">
                 <div className="font-black tracking-[0.28em] text-white">{BRAND_NAME}</div>
                 <div className="mt-1">{BRAND_TAGLINE}</div>
               </div>
+              <SocialLinks />
             </div>
           </footer>
 
           <MobileBottomNav />
+          <PWA />
         </div>
       </body>
     </html>

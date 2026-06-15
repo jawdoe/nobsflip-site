@@ -7,6 +7,7 @@ import MobileBottomNav from "./MobileBottomNav";
 import HeaderAvatar from "./HeaderAvatar";
 import PWA from "./PWA";
 import SocialLinks from "./SocialLinks";
+import InstallAppButton from "./InstallAppButton";
 
 const BRAND_NAME = "NOBSFLIPS";
 const BRAND_TAGLINE = "No Bullshit. Just Flips.";
@@ -81,6 +82,7 @@ export default function RootLayout({
                 <div className="font-black tracking-[0.28em] text-white">{BRAND_NAME}</div>
                 <div className="mt-1">{BRAND_TAGLINE}</div>
               </div>
+              <InstallAppButton label="📲 Get the App" />
               <SocialLinks />
             </div>
           </footer>

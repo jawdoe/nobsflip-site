@@ -130,8 +130,8 @@ async function fetchApify(searchTerm: string, marketplace: typeof marketplaceMap
         body: JSON.stringify({
           keywords: [searchTerm],
           ebaySite: marketplace.apifySite,
-          count: 25,
-          daysToScrape: 60,
+          count: 20,
+          daysToScrape: 35,
           sortOrder: "endedRecently",
         }),
         cache: "no-store",

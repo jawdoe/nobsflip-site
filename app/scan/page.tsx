@@ -71,6 +71,7 @@ export default function ScanPage() {
   const [flipSave, setFlipSave] = useState<FlipSaveState>(null);
   const [flipId, setFlipId] = useState<string | null>(null);
   const [country, setCountry] = useState("AU");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
@@ -211,9 +212,22 @@ export default function ScanPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) { setError("Couldn't grab that frame — try the photo button on the main screen."); return; }
     ctx.drawImage(video, 0, 0, w, h);
-    const base64 = canvas.toDataURL("image/jpeg", 0.8).split(",")[1] ?? "";
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
     await stopCamera();
-    await runVision(base64, "image/jpeg");
+    setPhotoPreview(dataUrl); // show a confirm / retake step before sending it off
+  }
+
+  // Confirm the previewed photo → send it to Vision.
+  function usePhoto() {
+    if (!photoPreview) return;
+    const base64 = photoPreview.split(",")[1] ?? "";
+    setPhotoPreview(null);
+    runVision(base64, "image/jpeg");
+  }
+  // Bin the preview and reopen the camera for another go.
+  function retakePhoto() {
+    setPhotoPreview(null);
+    startCamera();
   }
 
   async function startCamera() {
@@ -267,6 +281,25 @@ export default function ScanPage() {
               className="mt-1 flex items-center gap-2 rounded-2xl border border-purple-400/40 bg-purple-500/10 px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-purple-200 transition hover:bg-purple-500/20 active:scale-[0.97]">
               📷 No Barcode? Snap a Photo
             </button>
+          </div>
+        </div>
+      )}
+
+      {photoPreview && (
+        <div className="fixed inset-0 z-[55] flex flex-col bg-black">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">Happy with this shot?</p>
+              <p className="text-xs text-white/40">Make sure the label and any text is clear and in frame.</p>
+            </div>
+            <button onClick={() => { setPhotoPreview(null); setStep("idle"); }} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">Cancel</button>
+          </div>
+          <div className="flex flex-1 items-center justify-center p-4">
+            <img src={photoPreview} alt="Captured item" className="max-h-full max-w-full rounded-2xl object-contain" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 p-4 pb-8">
+            <button onClick={retakePhoto} className="rounded-2xl border border-white/15 py-4 text-sm font-black uppercase tracking-[0.08em] text-white/70 transition hover:bg-white/5 active:scale-[0.97]">↺ Retake</button>
+            <button onClick={usePhoto} className="rounded-2xl bg-purple-600 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 active:scale-[0.97]">Use This Photo →</button>
           </div>
         </div>
       )}

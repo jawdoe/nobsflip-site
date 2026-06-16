@@ -70,21 +70,11 @@ export default function ScanPage() {
   const [flipSave, setFlipSave] = useState<FlipSaveState>(null);
   const [flipId, setFlipId] = useState<string | null>(null);
   const [country, setCountry] = useState("AU");
-  const [isPremium, setIsPremium] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => { setCountry(getCountry()); }, []);
-
-  // Know whether to light up photo scan or show the upgrade prompt.
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase.from("profiles").select("is_premium").eq("id", user.id).single();
-      setIsPremium(data?.is_premium === true);
-    });
-  }, []);
 
   // Bottom-nav Scan button (when already on /scan) fires this to start a fresh scan.
   useEffect(() => {
@@ -170,10 +160,11 @@ export default function ScanPage() {
     });
   }
 
-  // Premium photo scan: snap -> Claude Vision IDs it -> ask price -> check comps.
+  // Premium photo scan. Camera always opens; the /api/vision route does the
+  // authoritative premium check (returns 403 + upgrade for non-premium), so
+  // there's no client-side race over the is_premium flag.
   async function handlePhoto(file: File | null) {
     if (!file) return;
-    if (!isPremium) { window.location.href = "/pricing"; return; }
     setError(""); setResult(null); setCapReached(null); setPendingBarcode(""); setPendingQuery("");
     setStep("loading");
     try {
@@ -339,21 +330,15 @@ export default function ScanPage() {
                 {step === "loading" ? "Checking eBay..." : "Tap to Scan"}
               </button>
 
-              {/* Photo scan — premium. No barcode? Just snap it. */}
+              {/* Photo scan — premium. Camera always opens; server checks premium. */}
               <button
-                onClick={() => isPremium ? photoInputRef.current?.click() : (window.location.href = "/pricing")}
+                onClick={() => photoInputRef.current?.click()}
                 disabled={step === "loading"}
-                className={"flex w-full items-center justify-center gap-2 rounded-2xl border py-4 text-sm font-black uppercase tracking-[0.1em] transition disabled:opacity-50 " +
-                  (isPremium
-                    ? "border-purple-400/40 bg-purple-500/10 text-purple-200 hover:bg-purple-500/20"
-                    : "border-white/10 bg-white/[0.03] text-white/45 hover:text-white")}>
-                {isPremium ? "📷 No Barcode? Snap a Photo" : (<><span>🔒 Photo Scan</span><span className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[9px] text-purple-300">Premium</span></>)}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-purple-400/40 bg-purple-500/10 py-4 text-sm font-black uppercase tracking-[0.1em] text-purple-200 transition hover:bg-purple-500/20 disabled:opacity-50">
+                📷 No Barcode? Snap a Photo
               </button>
               <p className="text-center text-[11px] text-white/30">
-                {isPremium
-                  ? "Books, clothes, homewares, collectibles — anything without a barcode."
-                  : "Scan anything without a barcode — books, clothes, collectibles. "}
-                {!isPremium && <a href="/pricing" className="text-purple-300 underline">Go Premium →</a>}
+                Books, clothes, homewares, collectibles — anything without a barcode.
               </p>
             </div>
           )}
@@ -405,14 +390,11 @@ export default function ScanPage() {
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-white/5 pt-3">
               <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/25">No barcode?</span>
-              <button type="button" onClick={() => isPremium ? photoInputRef.current?.click() : (window.location.href = "/pricing")} disabled={step === "loading"}
-                className={"flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-[0.08em] transition disabled:opacity-50 " +
-                  (isPremium ? "border-purple-400/40 bg-purple-500/10 text-purple-200 hover:bg-purple-500/20" : "border-white/10 text-white/40 hover:text-white")}>
-                {isPremium ? "📷 Photo Scan" : (<><span>🔒 Photo Scan</span><span className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[9px] text-purple-300">Premium</span></>)}
+              <button type="button" onClick={() => photoInputRef.current?.click()} disabled={step === "loading"}
+                className="flex items-center gap-2 rounded-xl border border-purple-400/40 bg-purple-500/10 px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-purple-200 transition hover:bg-purple-500/20 disabled:opacity-50">
+                📷 Photo Scan
               </button>
-              <span className="text-xs text-white/30">
-                {isPremium ? "Snap any item — Claude reads it and finds the comps." : <>Premium reads any item from a photo. <a href="/pricing" className="text-purple-300 underline">Upgrade →</a></>}
-              </span>
+              <span className="text-xs text-white/30">Snap any item — Claude reads it and finds the comps.</span>
             </div>
           </section>
         </div>

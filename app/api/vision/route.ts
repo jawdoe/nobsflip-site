@@ -9,11 +9,14 @@ const MODEL = process.env.ANTHROPIC_VISION_MODEL || "claude-haiku-4-5-20251001";
 
 const SYSTEM_PROMPT =
   "You are a reselling assistant for an op-shop flipper. You are shown ONE photo of a single " +
-  "second-hand item. Work out the best short eBay search query to find comparable SOLD listings " +
-  "for it. Read any visible text, brand names, logos, titles, authors, model numbers or markings, " +
-  "and factor in the style and era. Prefer specific identifiers (brand + model, or title + author) " +
-  "over generic descriptions. Reply with ONLY the search query: 2 to 8 words, no punctuation, no " +
-  "quotes, no commentary. If you genuinely cannot identify the item, reply with the single word UNKNOWN.";
+  "second-hand item. Produce the best short eBay search query to find comparable SOLD listings for it. " +
+  "Identify the item as SPECIFICALLY as you can: read every bit of visible text and prioritise the " +
+  "distinguishing details — exact model or part number, book title and author, edition or version, " +
+  "variant / scent / flavour name, size or capacity, colour, and year or era — not just the brand. " +
+  "The query must pin down the exact product, not the general category. Only fall back to brand plus " +
+  "product type if no more specific identifier is visible. Reply with ONLY the search query: 2 to 8 " +
+  "words, no punctuation, no quotes, no commentary. If you genuinely cannot identify the item, reply " +
+  "with the single word UNKNOWN.";
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;

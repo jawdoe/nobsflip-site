@@ -161,15 +161,13 @@ export default function ScanPage() {
     });
   }
 
-  // Premium photo scan. Camera always opens; the /api/vision route does the
-  // authoritative premium check (returns 403 + upgrade for non-premium), so
-  // there's no client-side race over the is_premium flag.
-  async function handlePhoto(file: File | null) {
-    if (!file) return;
+  // Send a base64 image to Claude Vision, which IDs the item and hands back an
+  // eBay search term. The /api/vision route does the authoritative premium check
+  // (403 + upgrade for non-premium), so there's no client-side race.
+  async function runVision(base64: string, mediaType: string) {
     setError(""); setResult(null); setCapReached(null); setPendingBarcode(""); setPendingQuery("");
     setStep("loading");
     try {
-      const { base64, mediaType } = await downscaleImage(file);
       const { data: { user } } = await supabase.auth.getUser();
       const res = await fetch("/api/vision", {
         method: "POST",
@@ -185,6 +183,37 @@ export default function ScanPage() {
       setError(err instanceof Error ? err.message : "Photo scan failed");
       setStep("idle");
     }
+  }
+
+  // Photo picked from the file input (native camera / gallery).
+  async function handlePhoto(file: File | null) {
+    if (!file) return;
+    try {
+      const { base64, mediaType } = await downscaleImage(file);
+      await runVision(base64, mediaType);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Photo scan failed");
+      setStep("idle");
+    }
+  }
+
+  // Inside the live barcode scanner: grab the current camera frame and run it
+  // through Vision instead — no need to open a second camera.
+  async function snapFromScanner() {
+    const video = document.querySelector("#barcode-reader video") as HTMLVideoElement | null;
+    if (!video || !video.videoWidth) { setError("Camera's not ready yet — give it a sec, then try again."); return; }
+    const max = 1024;
+    let w = video.videoWidth, h = video.videoHeight;
+    if (w > h && w > max) { h = Math.round((h * max) / w); w = max; }
+    else if (h >= w && h > max) { w = Math.round((w * max) / h); h = max; }
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { setError("Couldn't grab that frame — try the photo button on the main screen."); return; }
+    ctx.drawImage(video, 0, 0, w, h);
+    const base64 = canvas.toDataURL("image/jpeg", 0.8).split(",")[1] ?? "";
+    await stopCamera();
+    await runVision(base64, "image/jpeg");
   }
 
   async function startCamera() {
@@ -219,21 +248,25 @@ export default function ScanPage() {
         <div className="fixed inset-0 z-50 flex flex-col bg-black">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">Find the barcode</p>
+              <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-300">Show the barcode — or snap it</p>
               {buyPrice ? (
                 <p className="text-xs text-white/40">
                   Paying: {formatMoney(Number(buyPrice))}
                   {postageMode === "buyer" ? " · buyer pays post" : ` · you cover post (${formatMoney(Number(postageAmount || 0))})`}
                 </p>
               ) : (
-                <p className="text-xs text-white/40">Point at the barcode — hold it steady</p>
+                <p className="text-xs text-white/40">Got a barcode? Hold it steady. No barcode? Snap a photo.</p>
               )}
             </div>
             <button onClick={stopCamera} className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-300">Cancel</button>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
             <div id="barcode-reader" className="w-full max-w-xs overflow-hidden rounded-2xl" />
-            <p className="text-xs text-white/40">Hold it steady — it'll grab it in a sec</p>
+            <p className="text-xs text-white/40">Barcode? It'll grab it automatically.</p>
+            <button onClick={snapFromScanner}
+              className="mt-1 flex items-center gap-2 rounded-2xl border border-purple-400/40 bg-purple-500/10 px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-purple-200 transition hover:bg-purple-500/20 active:scale-[0.97]">
+              📷 No Barcode? Snap a Photo
+            </button>
           </div>
         </div>
       )}
@@ -330,16 +363,8 @@ export default function ScanPage() {
                 className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50">
                 {step === "loading" ? "Checking eBay..." : "Tap to Scan"}
               </button>
-
-              {/* Photo scan — premium. Camera always opens; server checks premium. */}
-              <button
-                onClick={() => photoInputRef.current?.click()}
-                disabled={step === "loading"}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-purple-400/40 bg-purple-500/10 py-4 text-sm font-black uppercase tracking-[0.1em] text-purple-200 transition hover:bg-purple-500/20 disabled:opacity-50">
-                📷 No Barcode? Snap a Photo
-              </button>
               <p className="text-center text-[11px] text-white/30">
-                Books, clothes, homewares, collectibles — anything without a barcode.
+                Barcode or not — open the camera, scan it or snap a photo. Books, clothes, homewares, collectibles, the lot.
               </p>
             </div>
           )}

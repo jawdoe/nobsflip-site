@@ -357,11 +357,11 @@ export default function ScanPage() {
           onChange={(e) => { const f = e.target.files?.[0] ?? null; e.target.value = ""; handlePhoto(f); }} />
 
         <div className="md:hidden">
-          {!result && (
+          {!result && step !== "loading" && (
             <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 py-8">
-              <button onClick={() => { setPendingBarcode(""); setPendingQuery(""); startCamera(); }} disabled={step === "loading"}
-                className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50">
-                {step === "loading" ? "Checking eBay..." : "Tap to Scan"}
+              <button onClick={() => { setPendingBarcode(""); setPendingQuery(""); startCamera(); }}
+                className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98]">
+                Tap to Scan
               </button>
               <p className="text-center text-[11px] text-white/30">
                 Barcode or not — open the camera, scan it or snap a photo. Books, clothes, homewares, collectibles, the lot.
@@ -426,6 +426,14 @@ export default function ScanPage() {
         </div>
 
         {error && <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">{error}</div>}
+
+        {step === "loading" && !result && !capReached && (
+          <div className="mt-4 flex min-h-[45vh] flex-col items-center justify-center gap-4 rounded-[2rem] border border-white/10 bg-white/[0.03] py-16 text-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-purple-400/30 border-t-purple-400" />
+            <p className="text-sm font-black uppercase tracking-[0.15em] text-purple-200">On it…</p>
+            <p className="text-xs text-white/40">Reading the item and pulling the sold comps.</p>
+          </div>
+        )}
 
         {capReached && (
           <div className="mt-4 rounded-[2rem] border border-purple-500/40 bg-purple-500/10 p-6 text-center shadow-[0_0_50px_rgba(147,51,234,0.15)]">

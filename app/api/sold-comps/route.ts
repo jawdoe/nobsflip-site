@@ -62,6 +62,27 @@ function looksLikeBulk(title: string): boolean {
   return /(\b[2-9]\d*\s*x\b|\bx\s*[2-9]\d*\b|\b[2-9]\d*\s*-?\s*pack\b|\bpack of\s*[2-9]\d*|\bjob\s?lot\b|\blot of\b|\bbulk\b|\bwholesale\b|\bbundle\b|\bmultipack\b|\bmulti pack\b|\bcarton\b|\bpallet\b|\bcase of\b|\b[2-9]\d*\s*pcs\b|\b[2-9]\d*\s*pieces\b|\btwin pack\b|\btriple pack\b)/.test(t);
 }
 
+// Generic format / filler words that shouldn't decide relevance.
+const FORMAT_STOP = new Set(["dvd","bluray","blu","ray","cd","vhs","region","pal","ntsc","the","and","for","with","new","sealed","used","complete","boxset","box","set","edition","series","season","disc","discs","movie","film","show","vol","volume"]);
+
+// Keep only comps whose title actually contains the distinctive words of the
+// search (e.g. "farscape"), and — when a season/number is given — prefer titles
+// with that exact number. Stops loosely-related junk: other seasons, other shows.
+function filterRelevant(searchTerm: string, items: SoldItem[]): SoldItem[] {
+  const toks = searchTerm.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const keyWords = toks.filter((t) => t.length >= 3 && !FORMAT_STOP.has(t) && !/^\d+$/.test(t));
+  if (!keyWords.length) return items;
+  let matched = items.filter((i) => { const t = (i.title || "").toLowerCase(); return keyWords.every((k) => t.includes(k)); });
+  if (matched.length < 2) return items; // not confident enough — keep everything
+  const numTok = toks.find((t) => /^\d{1,2}$/.test(t));
+  if (numTok) {
+    const re = new RegExp(`(^|[^0-9])${numTok}([^0-9]|$)`);
+    const narrowed = matched.filter((i) => re.test(i.title || ""));
+    if (narrowed.length >= 2) matched = narrowed;
+  }
+  return matched;
+}
+
 const ebayFeeRate: Record<string, number> = { AU: 0.134, US: 0.1325, GB: 0.128, CA: 0.1325, NZ: 0.134, DE: 0.125, FR: 0.125, IT: 0.125, ES: 0.125 };
 
 const marketplaceMap: Record<string, { globalId: string; locatedIn: string; currency: string; browseId: string; apifySite: string }> = {
@@ -283,6 +304,13 @@ export async function GET(req: NextRequest) {
       dataSource = "EBAY_BROWSE_ACTIVE";
       warning = "Showing active listing prices, not what items actually sold for.";
       findingApiStatus += " → Browse fallback";
+    }
+
+    // Drop loosely-related comps (wrong season, different show, etc.) so the
+    // price reflects the actual item, not whatever eBay decided was "similar".
+    if (items && items.length) {
+      const relevant = filterRelevant(searchTerm, items);
+      if (relevant.length) { items = relevant; findingApiStatus += ` (relevant: ${relevant.length})`; }
     }
 
     // Drop bulk / multipack / job-lot listings so a single-item scan isn't priced

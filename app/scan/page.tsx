@@ -11,6 +11,7 @@ type EbayResult = {
   ebayFeeEstimate: number; estimatedProfit: number; roi: number;
   lowPrice: number; highPrice: number; isPremium: boolean; freeScansRemaining?: number | null;
   soldCount?: number; demandLabel?: "High" | "Medium" | "Low" | "None" | null;
+  bulkOnly?: boolean;
   verdict: "BUY" | "MAYBE" | "SKIP";
   _debug?: { findingApiStatus: string; country: string; marketplace: string };
   items: { title: string; price: string; currency: string; condition: string; soldDate: string; url: string; }[];
@@ -427,6 +428,12 @@ export default function ScanPage() {
             ) : (
               <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-xs text-green-300">
                 <span className="font-black">True blue sold data</span> — what punters actually paid, not what some bloke's hoping for.
+              </div>
+            )}
+
+            {result.bulkOnly && (
+              <div className="rounded-2xl border border-orange-500/30 bg-orange-500/10 p-3 text-xs leading-5 text-orange-300">
+                <span className="font-black">Heads up — sells in bulk:</span> Couldn't find many single-item sales for this. It mostly goes as multipacks or job lots, so the price below is for a bundle, not one on its own. Take it with a grain of salt.
               </div>
             )}
 

@@ -54,6 +54,14 @@ function median(values: number[]) { if (!values.length) return 0; const sorted =
 function getVerdict(profit: number, roi: number, soldCount: number): Verdict { if (soldCount === 0) return "SKIP"; if (profit >= 10 && roi >= 80) return "BUY"; if (profit >= 4 && roi >= 30) return "MAYBE"; return "SKIP"; }
 function looksLikeBarcode(s: string) { return /^\d{8,14}$/.test(s.trim()); }
 
+// Detects bulk / multipack / job-lot listings so a single-item scan isn't priced
+// off a whole carton (e.g. "6 x", "pack of 12", "job lot", "wholesale", "bundle").
+function looksLikeBulk(title: string): boolean {
+  if (!title) return false;
+  const t = title.toLowerCase();
+  return /(\b[2-9]\d*\s*x\b|\bx\s*[2-9]\d*\b|\b[2-9]\d*\s*-?\s*pack\b|\bpack of\s*[2-9]\d*|\bjob\s?lot\b|\blot of\b|\bbulk\b|\bwholesale\b|\bbundle\b|\bmultipack\b|\bmulti pack\b|\bcarton\b|\bpallet\b|\bcase of\b|\b[2-9]\d*\s*pcs\b|\b[2-9]\d*\s*pieces\b|\btwin pack\b|\btriple pack\b)/.test(t);
+}
+
 const ebayFeeRate: Record<string, number> = { AU: 0.134, US: 0.1325, GB: 0.128, CA: 0.1325, NZ: 0.134, DE: 0.125, FR: 0.125, IT: 0.125, ES: 0.125 };
 
 const marketplaceMap: Record<string, { globalId: string; locatedIn: string; currency: string; browseId: string; apifySite: string }> = {
@@ -277,6 +285,22 @@ export async function GET(req: NextRequest) {
       findingApiStatus += " → Browse fallback";
     }
 
+    // Drop bulk / multipack / job-lot listings so a single-item scan isn't priced
+    // off a whole carton. If there aren't enough single-item comps, flag that it
+    // mostly sells in bulk instead of quietly pricing off a multipack.
+    let bulkOnly = false;
+    if (items && items.length) {
+      const singles = items.filter((i) => !looksLikeBulk(i.title));
+      const bulkCount = items.length - singles.length;
+      if (singles.length >= 2) {
+        items = singles;
+        findingApiStatus += ` (filtered bulk: kept ${singles.length})`;
+      } else if (bulkCount > 0) {
+        bulkOnly = true;
+        findingApiStatus += ` (mostly bulk: ${bulkCount}/${items.length})`;
+      }
+    }
+
     const prices = items.map((i) => i.price);
     const averagePrice = prices.length ? prices.reduce((s, p) => s + p, 0) / prices.length : 0;
     const medianPrice = median(prices);
@@ -322,6 +346,7 @@ export async function GET(req: NextRequest) {
       verdict, items,
       soldCount,
       demandLabel,
+      bulkOnly,
       _debug: { findingApiStatus, country, marketplace: marketplace.globalId },
     });
   } catch (error) {

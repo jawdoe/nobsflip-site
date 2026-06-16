@@ -73,7 +73,7 @@ function filterRelevant(searchTerm: string, items: SoldItem[]): SoldItem[] {
   const keyWords = toks.filter((t) => t.length >= 3 && !FORMAT_STOP.has(t) && !/^\d+$/.test(t));
   if (!keyWords.length) return items;
   let matched = items.filter((i) => { const t = (i.title || "").toLowerCase(); return keyWords.every((k) => t.includes(k)); });
-  if (matched.length < 2) return items; // not confident enough — keep everything
+  if (matched.length < 1) return items; // nothing matched the item's name — keep all as a last resort
   const numTok = toks.find((t) => /^\d{1,2}$/.test(t));
   if (numTok) {
     const re = new RegExp(`(^|[^0-9])${numTok}([^0-9]|$)`);
@@ -130,8 +130,8 @@ async function fetchApify(searchTerm: string, marketplace: typeof marketplaceMap
         body: JSON.stringify({
           keywords: [searchTerm],
           ebaySite: marketplace.apifySite,
-          count: 20,
-          daysToScrape: 35,
+          count: 25,
+          daysToScrape: 60,
           sortOrder: "endedRecently",
         }),
         cache: "no-store",

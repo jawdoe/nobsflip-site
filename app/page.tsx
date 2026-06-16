@@ -63,7 +63,7 @@ export default function HomePage() {
         <div className="mt-12 md:mt-20">
           <p className="text-center text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">How It Works</p>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 md:mt-6 md:gap-4">
-            <Step num="1" title="Scan the barcode" body="Point ya phone at the barcode on the shelf. Or type it in manually if ya don't trust the camera." />
+            <Step num="1" title="Scan the barcode" body="Point ya phone at the barcode on the shelf. No barcode? Premium lets ya snap a photo and Claude IDs it for ya." />
             <Step num="2" title="See real sold prices" body="Actual eBay sales from your local marketplace — not what some bloke reckons it's worth, what people actually paid." />
             <Step num="3" title="Get a straight answer" body="Chuck in what the shop's asking and get a true blue YES, MAYBE, or HELL NO. No galah business, just the facts." />
           </div>

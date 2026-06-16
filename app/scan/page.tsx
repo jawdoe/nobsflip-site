@@ -63,16 +63,28 @@ export default function ScanPage() {
   }, [postageMode, postageAmount]);
   const [barcode, setBarcode] = useState("");
   const [pendingBarcode, setPendingBarcode] = useState("");
+  const [pendingQuery, setPendingQuery] = useState("");
   const [result, setResult] = useState<EbayResult | null>(null);
   const [error, setError] = useState("");
   const [capReached, setCapReached] = useState<{ limit: number; used: number } | null>(null);
   const [flipSave, setFlipSave] = useState<FlipSaveState>(null);
   const [flipId, setFlipId] = useState<string | null>(null);
   const [country, setCountry] = useState("AU");
+  const [isPremium, setIsPremium] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<any>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => { setCountry(getCountry()); }, []);
+
+  // Know whether to light up photo scan or show the upgrade prompt.
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("is_premium").eq("id", user.id).single();
+      setIsPremium(data?.is_premium === true);
+    });
+  }, []);
 
   // Bottom-nav Scan button (when already on /scan) fires this to start a fresh scan.
   useEffect(() => {
@@ -87,12 +99,12 @@ export default function ScanPage() {
   const satchelOptions = freePostageOptions[country] ?? defaultPostageOptions;
   const effectivePostage = postageMode === "buyer" ? "0" : (postageAmount || "0");
 
-  async function runCheck(scannedBarcode: string, price: string, post: string) {
+  async function runCheck(searchValue: string, price: string, post: string, kind: "barcode" | "query" = "barcode") {
     setStep("loading"); setError(""); setResult(null); setFlipSave(null); setFlipId(null); setCapReached(null);
     try {
       const locale = typeof navigator !== "undefined" ? navigator.language : "en-AU";
       const { data: { user } } = await supabase.auth.getUser();
-      const params = new URLSearchParams({ barcode: scannedBarcode, buy: price || "0", postage: post, locale, ...(user ? { userId: user.id } : {}) });
+      const params = new URLSearchParams({ [kind]: searchValue, buy: price || "0", postage: post, locale, ...(user ? { userId: user.id } : {}) });
       const response = await fetch("/api/sold-comps?" + params.toString());
       const text = await response.text();
       let data: any;
@@ -106,7 +118,7 @@ export default function ScanPage() {
       setResult(data);
       try {
         if (user) {
-          const { error: insertError } = await supabase.from("scans").insert({ user_id: user.id, barcode: scannedBarcode || null, search_term: data.search, buy_price: data.buyPrice ?? 0, median_price: data.medianPrice ?? 0, estimated_profit: data.estimatedProfit ?? 0, roi: data.roi ?? 0, verdict: data.verdict, result_count: data.resultCount ?? 0, data_source: data.dataSource });
+          const { error: insertError } = await supabase.from("scans").insert({ user_id: user.id, barcode: kind === "barcode" ? (searchValue || null) : null, search_term: data.search, buy_price: data.buyPrice ?? 0, median_price: data.medianPrice ?? 0, estimated_profit: data.estimatedProfit ?? 0, roi: data.roi ?? 0, verdict: data.verdict, result_count: data.resultCount ?? 0, data_source: data.dataSource });
           if (insertError) { console.error("Scan save error:", insertError); }
         }
       } catch { /* scan save errors are non-fatal */ }
@@ -129,6 +141,58 @@ export default function ScanPage() {
       setFlipId(inserted.id);
       setFlipSave("saved");
     } catch { setFlipSave("failed"); }
+  }
+
+  // Shrink the snapped photo before upload — keeps the Vision call cheap and fast.
+  function downscaleImage(file: File): Promise<{ base64: string; mediaType: string }> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Couldn't read that photo"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("Couldn't read that photo"));
+        img.onload = () => {
+          const max = 1024;
+          let { width, height } = img;
+          if (width > height && width > max) { height = Math.round((height * max) / width); width = max; }
+          else if (height >= width && height > max) { width = Math.round((width * max) / height); height = max; }
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { reject(new Error("Couldn't process that photo")); return; }
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          resolve({ base64: dataUrl.split(",")[1] ?? "", mediaType: "image/jpeg" });
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Premium photo scan: snap -> Claude Vision IDs it -> ask price -> check comps.
+  async function handlePhoto(file: File | null) {
+    if (!file) return;
+    if (!isPremium) { window.location.href = "/pricing"; return; }
+    setError(""); setResult(null); setCapReached(null); setPendingBarcode(""); setPendingQuery("");
+    setStep("loading");
+    try {
+      const { base64, mediaType } = await downscaleImage(file);
+      const { data: { user } } = await supabase.auth.getUser();
+      const res = await fetch("/api/vision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mediaType, userId: user?.id }),
+      });
+      const data = await res.json();
+      if (res.status === 403 || data.upgrade) { window.location.href = "/pricing"; return; }
+      if (!res.ok || !data.searchTerm) throw new Error(data.error ?? "Couldn't read that photo");
+      setPendingQuery(data.searchTerm);
+      setStep("price");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Photo scan failed");
+      setStep("idle");
+    }
   }
 
   async function startCamera() {
@@ -186,7 +250,16 @@ export default function ScanPage() {
         <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/70 backdrop-blur-sm">
           <div className="flex min-h-full items-end justify-center sm:items-center sm:p-4">
           <div className="w-full max-w-sm rounded-t-[2rem] border border-white/10 bg-[#0f0f14] p-6 pb-8 sm:rounded-[2rem] sm:pb-6">
-            {pendingBarcode ? (
+            {pendingQuery ? (
+              <>
+                <div className="mb-3 flex items-center gap-2 rounded-xl border border-purple-500/25 bg-purple-500/10 px-3 py-2">
+                  <span className="text-xs font-black text-purple-300">📷 Reckon it's</span>
+                  <span className="truncate text-xs text-purple-200/80">{pendingQuery}</span>
+                </div>
+                <h2 className="text-lg font-black uppercase tracking-tight text-white">What's it going for?</h2>
+                <p className="mt-1 text-sm text-white/50">Not quite right? Cancel and snap it again, or just chuck in the price.</p>
+              </>
+            ) : pendingBarcode ? (
               <>
                 <div className="mb-3 flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2">
                   <span className="text-xs font-black text-green-400">✓ Got it</span>
@@ -203,7 +276,7 @@ export default function ScanPage() {
             )}
 
             <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Store price</label>
-            <input autoFocus type="number" min="0" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera())} placeholder="0.00"
+            <input autoFocus type="number" min="0" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (pendingQuery ? runCheck(pendingQuery, buyPrice, effectivePostage, "query") : pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera())} placeholder="0.00"
               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-white/20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30" />
 
             <label className="mt-5 block text-xs font-black uppercase tracking-[0.18em] text-white/40">Postage</label>
@@ -238,10 +311,10 @@ export default function ScanPage() {
             )}
 
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button onClick={() => { setPendingBarcode(""); setStep("idle"); }} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">Cancel</button>
-              <button onClick={() => pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera()} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">{pendingBarcode ? "Check It" : "Scan Barcode"}</button>
+              <button onClick={() => { setPendingBarcode(""); setPendingQuery(""); setStep("idle"); }} className="rounded-2xl border border-white/10 py-3 text-sm font-black uppercase text-white/50">Cancel</button>
+              <button onClick={() => pendingQuery ? runCheck(pendingQuery, buyPrice, effectivePostage, "query") : pendingBarcode ? runCheck(pendingBarcode, buyPrice, effectivePostage) : startCamera()} className="rounded-2xl bg-purple-600 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_0_18px_rgba(147,51,234,0.3)]">{pendingQuery || pendingBarcode ? "Check It" : "Scan Barcode"}</button>
             </div>
-            {!pendingBarcode && <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">Can't scan it? Chuck the barcode in manually</button>}
+            {!pendingBarcode && !pendingQuery && <button onClick={() => setStep("manual")} className="mt-2 w-full py-2 text-xs text-white/30 underline">Can't scan it? Chuck the barcode in manually</button>}
           </div>
           </div>
         </div>
@@ -254,13 +327,34 @@ export default function ScanPage() {
           <p className="mt-1 text-sm text-white/50">Point ya phone at a barcode, get a straight answer. Fair go, no waffle.</p>
         </div>
 
+        {/* Hidden camera input — powers premium photo scan on every breakpoint. */}
+        <input ref={photoInputRef} type="file" accept="image/*" capture="environment" className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0] ?? null; e.target.value = ""; handlePhoto(f); }} />
+
         <div className="md:hidden">
           {!result && (
-            <div className="flex min-h-[40vh] items-center justify-center py-8">
-              <button onClick={() => { setPendingBarcode(""); startCamera(); }} disabled={step === "loading"}
+            <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 py-8">
+              <button onClick={() => { setPendingBarcode(""); setPendingQuery(""); startCamera(); }} disabled={step === "loading"}
                 className="w-full rounded-[2rem] bg-purple-600 py-8 text-xl font-black uppercase tracking-[0.1em] text-white shadow-[0_0_40px_rgba(147,51,234,0.5)] transition hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50">
                 {step === "loading" ? "Checking eBay..." : "Tap to Scan"}
               </button>
+
+              {/* Photo scan — premium. No barcode? Just snap it. */}
+              <button
+                onClick={() => isPremium ? photoInputRef.current?.click() : (window.location.href = "/pricing")}
+                disabled={step === "loading"}
+                className={"flex w-full items-center justify-center gap-2 rounded-2xl border py-4 text-sm font-black uppercase tracking-[0.1em] transition disabled:opacity-50 " +
+                  (isPremium
+                    ? "border-purple-400/40 bg-purple-500/10 text-purple-200 hover:bg-purple-500/20"
+                    : "border-white/10 bg-white/[0.03] text-white/45 hover:text-white")}>
+                {isPremium ? "📷 No Barcode? Snap a Photo" : (<><span>🔒 Photo Scan</span><span className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[9px] text-purple-300">Premium</span></>)}
+              </button>
+              <p className="text-center text-[11px] text-white/30">
+                {isPremium
+                  ? "Books, clothes, homewares, collectibles — anything without a barcode."
+                  : "Scan anything without a barcode — books, clothes, collectibles. "}
+                {!isPremium && <a href="/pricing" className="text-purple-300 underline">Go Premium →</a>}
+              </p>
             </div>
           )}
           {step === "manual" && (
@@ -308,6 +402,17 @@ export default function ScanPage() {
                   {postageAmount && <span className="text-xs text-white/30">{satchelOptions.find((o) => o.value === postageAmount)?.hint ?? formatMoney(Number(postageAmount)) + " off profit"}</span>}
                 </>
               )}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-white/5 pt-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/25">No barcode?</span>
+              <button type="button" onClick={() => isPremium ? photoInputRef.current?.click() : (window.location.href = "/pricing")} disabled={step === "loading"}
+                className={"flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-[0.08em] transition disabled:opacity-50 " +
+                  (isPremium ? "border-purple-400/40 bg-purple-500/10 text-purple-200 hover:bg-purple-500/20" : "border-white/10 text-white/40 hover:text-white")}>
+                {isPremium ? "📷 Photo Scan" : (<><span>🔒 Photo Scan</span><span className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[9px] text-purple-300">Premium</span></>)}
+              </button>
+              <span className="text-xs text-white/30">
+                {isPremium ? "Snap any item — Claude reads it and finds the comps." : <>Premium reads any item from a photo. <a href="/pricing" className="text-purple-300 underline">Upgrade →</a></>}
+              </span>
             </div>
           </section>
         </div>

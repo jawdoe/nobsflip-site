@@ -15,7 +15,6 @@ const FREE_FEATURES = [
 
 const PREMIUM_FEATURES = [
   "Everything in Free",
-  "Photo scan — no barcode needed, just snap it",
   "Unlimited scans — no daily cap",
   "Real sold prices — what punters actually paid",
   "Price range on every scan (low / median / high)",
@@ -125,19 +124,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="mt-8 rounded-[2rem] border border-purple-500/25 bg-purple-500/[0.07] p-8 md:flex md:items-center md:gap-6">
-          <div className="text-5xl md:text-6xl">📷</div>
-          <div className="mt-4 md:mt-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">New · Premium</p>
-            <h2 className="mt-1 text-2xl font-black uppercase tracking-tight">No Barcode? No Worries.</h2>
-            <p className="mt-2 text-sm leading-6 text-white/60">
-              Books, clothes, homewares, ceramics, tools, collectibles — half the good gear in an op shop has no barcode.
-              Just snap a photo and Claude reads the brand, title and markings, then pulls the sold comps for ya. Same straight answer, no typing.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-8 text-center">
+        <div className="mt-12 rounded-[2rem] border border-white/10 bg-white/[0.02] p-8 text-center">
           <p className="text-sm font-black uppercase tracking-[0.15em] text-white/30">The math</p>
           <p className="mt-3 text-2xl font-black">One ripper flip pays for the whole year.</p>
           <p className="mt-2 text-sm text-white/40">$9/month. Find one extra flip a month and it pays for itself. The real sold data should hand that to ya on a plate.</p>

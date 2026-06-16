@@ -63,7 +63,7 @@ export default function HomePage() {
         <div className="mt-12 md:mt-20">
           <p className="text-center text-[10px] font-black uppercase tracking-[0.24em] text-purple-300">How It Works</p>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 md:mt-6 md:gap-4">
-            <Step num="1" title="Scan the barcode" body="Point ya phone at the barcode on the shelf. No barcode? Premium lets ya snap a photo and Claude IDs it for ya." />
+            <Step num="1" title="Scan the barcode" body="Point ya phone at the barcode on the shelf. Or type it in manually if ya don't trust the camera." />
             <Step num="2" title="See real sold prices" body="Actual eBay sales from your local marketplace — not what some bloke reckons it's worth, what people actually paid." />
             <Step num="3" title="Get a straight answer" body="Chuck in what the shop's asking and get a true blue YES, MAYBE, or HELL NO. No galah business, just the facts." />
           </div>
@@ -102,4 +102,11 @@ export default function HomePage() {
 function Step({ num, title, body }: { num: string; title: string; body: string }) {
   return (
     <div className="rounded-[2rem] border border-white/10 bg-black/60 p-6 backdrop-blur-md">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full b
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 text-sm font-black text-white shadow-[0_0_16px_rgba(147,51,234,0.35)]">
+        {num}
+      </div>
+      <h3 className="mt-4 text-base font-black uppercase tracking-tight text-white">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-white/60">{body}</p>
+    </div>
+  );
+}
